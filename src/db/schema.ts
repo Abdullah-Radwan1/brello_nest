@@ -5,7 +5,6 @@ import {
   text,
   timestamp,
   pgEnum,
-  integer,
 } from 'drizzle-orm/pg-core';
 
 // ===== TaskStatus enum =====
@@ -15,6 +14,7 @@ export const TaskStatus = pgEnum('task_status', [
   'REVIEW',
   'DONE',
 ]);
+export const RoleEnum = pgEnum('role_enum', ['contributor', 'manager']);
 
 // ===== Users table =====
 export const User = pgTable('User', {
@@ -29,16 +29,18 @@ export const Project = pgTable('Project', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
-  adminId: uuid('admin_id').notNull(),
+  manager_id: uuid('manager_id')
+    .notNull()
+    .references(() => User.id), // ✔ correct
   createdAt: timestamp('created_at').defaultNow(),
 });
 
 // ===== Contributors table =====
 export const Contributor = pgTable('Contributor', {
   id: uuid('id').primaryKey().defaultRandom(),
-  projectId: uuid('project_id').notNull(),
+  project_id: uuid('project_id').notNull(),
   userId: uuid('user_id').notNull(),
-  role: varchar('role', { length: 50 }).notNull(), // contributor or manager
+  role: RoleEnum('role').notNull().default('contributor'),
 });
 
 // ===== Tasks table =====
@@ -47,7 +49,7 @@ export const Task = pgTable('Task', {
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description'),
   status: TaskStatus('status').notNull().default('TODO'),
-  projectId: uuid('project_id').notNull(),
-  assigneeId: uuid('assignee_id'),
+  project_id: uuid('project_id').notNull(),
+  assignee_id: uuid('assignee_id'),
   createdAt: timestamp('created_at').defaultNow(),
 });
