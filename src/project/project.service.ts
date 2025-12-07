@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateProjectDto } from './dto/create-project.dto';
+
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { db } from 'src/db/drizzle';
 import { Contributor, Project } from 'src/db/schema';
@@ -34,8 +34,8 @@ export class ProjectService {
     return createdProject;
   }
 
-  findAll() {
-    return `This action returns all project`;
+  findMyProjects(userId: string) {
+    return db.select().from(Project).where(eq(Project.manager_id, userId));
   }
 
   findOne(id: number) {

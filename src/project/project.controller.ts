@@ -6,12 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { Public } from 'src/auth/public.decorator';
 
-@Controller('project')
+@Controller('projects')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
@@ -19,10 +21,9 @@ export class ProjectController {
   create(@Body() createProjectDto: CreateProjectDto) {
     return this.projectService.createProject(createProjectDto);
   }
-
   @Get()
-  findAll() {
-    return this.projectService.findAll();
+  findMyProjects(@Req() req) {
+    return this.projectService.findMyProjects(req.user.id);
   }
 
   @Get(':id')

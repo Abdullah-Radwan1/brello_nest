@@ -23,9 +23,45 @@ export class AuthService {
   }
 
   // تستخدم بعد نجاح LocalStrategy
-  async login({ email, password }: LoginDto) {
+  async login({
+    name,
+    email,
+    id,
+  }: {
+    name: string;
+    email: string;
+    id: string;
+  }) {
     return {
-      access_token: this.jwtService.sign({ email, password }),
+      access_token: this.jwtService.sign({ name, id, email }),
+    };
+  }
+
+  async signup({
+    name,
+    email,
+    password,
+  }: {
+    name: string;
+    email: string;
+    password: string;
+  }) {
+    const existingUser = await this.usersService.findOneByEmail(email);
+    if (existingUser) {
+      throw new UnauthorizedException('Email already in use');
+    }
+    const createdUser = await this.usersService.create({
+      name,
+      email,
+      password,
+    })[0];
+    return {
+      access_token: this.jwtService.sign({
+        name: createdUser.name,
+        id: createdUser.id,
+        email: createdUser.email,
+      }),
+      message: 'User registered successfully',
     };
   }
 }

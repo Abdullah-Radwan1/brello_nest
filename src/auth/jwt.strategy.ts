@@ -7,15 +7,16 @@ import { jwtConstants } from './constants';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req) => req?.cookies?.access_token, // read from cookie
+      ]),
       ignoreExpiration: false,
       secretOrKey: jwtConstants.secret,
     });
   }
 
   async validate(payload: any) {
-    // payload اللي بنعمله sign في AuthService.login
-    // عادةً: { sub: user.id, email: user.email }
-    return { id: payload.sub, email: payload.email };
+    // payload: { id, name, email }
+    return { id: payload.id, email: payload.email, name: payload.name };
   }
 }

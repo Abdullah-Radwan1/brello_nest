@@ -1,21 +1,55 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Req, Res } from '@nestjs/common';
 import { LocalAuthGuard } from './local.auth.guard';
 import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
-import { LoginDto } from './dto/login.dto';
+import type { Request, Response } from 'express';
+import { SignupDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  // LOGIN ROUTE → Public
   @Public()
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(LocalAuthGuard) // uses validate from LocalStrategy
   @Post('signin')
-  async login(@Body() LoginDto: LoginDto) {
-    // The LocalAuthGuard will validate the email/password
-    // The user object will be attached to the request by the guard
-    // Note: req.user is now accessible in the guard, not in the body
-    return this.authService.login(LoginDto);
+  async login(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as any;
+
+    // generate token
+    const { access_token } = await this.authService.login({
+      email: user.email,
+      id: user.id,
+      name: user.name,
+    });
+
+    // set cookie with the correct variable
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: false, // must be false on localhost
+      sameSite: 'lax', // allows cross-port requests
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+
+    return res.send({
+      user: { id: user.id, email: user.email, name: user.name },
+      message: 'Logged in successfully',
+    });
+  }
+
+  @Public()
+  @Post('signup')
+  async signup(@Body() dto: SignupDto, @Res() res: Response) {
+    const { access_token } = await this.authService.signup(dto);
+
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax', // changed from strict to allow cross-port
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+
+    return res.send({ message: 'User registered successfully' });
   }
 }
