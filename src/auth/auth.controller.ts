@@ -26,13 +26,13 @@ export class AuthController {
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: false, // must be false on localhost
-      sameSite: 'lax', // allows cross-port requests
+      sameSite: 'strict', // allows cross-port requests
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
 
     return res.send({
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { email: user.email, name: user.name },
       message: 'Logged in successfully',
     });
   }
@@ -45,7 +45,7 @@ export class AuthController {
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: false,
-      sameSite: 'lax', // changed from strict to allow cross-port
+      sameSite: 'strict', // changed from strict to allow cross-port
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });

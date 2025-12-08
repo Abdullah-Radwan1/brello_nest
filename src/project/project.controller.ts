@@ -11,7 +11,6 @@ import {
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { Public } from 'src/auth/public.decorator';
 
 @Controller('projects')
 export class ProjectController {
