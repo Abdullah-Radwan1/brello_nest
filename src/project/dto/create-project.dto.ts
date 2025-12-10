@@ -1,4 +1,12 @@
-import { IsString, MinLength, IsUUID, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  MinLength,
+  IsUUID,
+  IsNotEmpty,
+  IsArray,
+  IsOptional,
+} from 'class-validator';
+import { ContributorInput } from 'src/db/types';
 
 export class CreateProjectDto {
   @IsString()
@@ -10,7 +18,7 @@ export class CreateProjectDto {
   @IsNotEmpty()
   description: string;
 
-  @IsString()
-  @IsUUID()
-  manager_id: string;
+  @IsArray()
+  @IsOptional()
+  contributors?: ContributorInput[];
 }

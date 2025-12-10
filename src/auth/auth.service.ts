@@ -1,8 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Res, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -51,15 +50,16 @@ export class AuthService {
       throw new UnauthorizedException('Email already in use');
     }
     const createdUser = await this.usersService.create({
-      name,
       email,
+      name,
       password,
-    })[0];
+    });
+    const user = createdUser[0];
     return {
       access_token: this.jwtService.sign({
-        name: createdUser.name,
-        id: createdUser.id,
-        email: createdUser.email,
+        name: user.name,
+        email: user.email,
+        id: user.id,
       }),
       message: 'User registered successfully',
     };

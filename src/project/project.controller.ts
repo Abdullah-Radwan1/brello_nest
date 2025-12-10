@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Req,
+  Request,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -17,8 +18,9 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.createProject(createProjectDto);
+  create(@Request() req, @Body() createProjectDto: CreateProjectDto) {
+    const currentUserId = req.user.id;
+    return this.projectService.createProject(createProjectDto, currentUserId);
   }
   @Get()
   findMyProjects(@Req() req) {

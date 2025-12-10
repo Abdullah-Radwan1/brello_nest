@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Request,
+} from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 // import { UpdateUserDto } from './dto/update-user.dto';
@@ -12,8 +20,19 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @Get('/')
+  async findAllUsers(
+    @Request() req,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 6,
+    @Query('search') search: string = '',
+  ) {
+    const currentUserId = req.user.id;
+    return this.usersService.getAllUsers(page, limit, search, currentUserId);
+  }
+
   @Get('/contributors')
-  findAll(@Body('project_id') project_id: string) {
+  findAllContributors(@Body('project_id') project_id: string) {
     return this.usersService.getContributors(project_id);
   }
 

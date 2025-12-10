@@ -52,4 +52,16 @@ export class AuthController {
 
     return res.send({ message: 'User registered successfully' });
   }
+
+  @Post('signout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    // Clear the HTTP-only cookie
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
+    });
+
+    return { message: 'Logged out successfully' };
+  }
 }
