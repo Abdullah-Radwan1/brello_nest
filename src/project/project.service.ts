@@ -2,9 +2,13 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { db } from 'src/db/drizzle';
-import { Contributor, Project } from 'src/db/schema';
+import { Contributor, Invitation, Project } from 'src/db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { CreateProjectInput, RoleEnumTS } from 'src/db/types';
+import {
+  CreateProjectInput,
+  InvitationStatusEnumTS,
+  RoleEnumTS,
+} from 'src/db/types';
 
 @Injectable()
 export class ProjectService {
@@ -37,12 +41,13 @@ export class ProjectService {
     });
 
     // 3️⃣ Add contributors
-    if (data.contributors?.length) {
-      await db.insert(Contributor).values(
-        data.contributors.map((c) => ({
+    if (data.invitations?.length) {
+      await db.insert(Invitation).values(
+        data.invitations.map((c) => ({
           project_id: createdProject.id,
-          userId: c.userId,
-          role: RoleEnumTS.CONTRIBUTOR,
+          status: InvitationStatusEnumTS.PENDING,
+          invited_user_id: c.invited_user_id,
+          inviter_id: currentUserId,
         })),
       );
     }

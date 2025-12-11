@@ -5,10 +5,21 @@ export const RoleEnumTS = {
   MANAGER: 'manager', // Represents a project manager role
 } as const; // 'as const' tells TypeScript these values are **readonly literals**, not just strings
 
+export const InvitationStatusEnumTS = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  DECLINED: 'DECLINED',
+} as const;
 // This allows TypeScript to enforce valid role values wherever RoleTS is used.
 export type RoleTS = (typeof RoleEnumTS)[keyof typeof RoleEnumTS];
-
+export type InvitationStatusTS =
+  (typeof InvitationStatusEnumTS)[keyof typeof InvitationStatusEnumTS];
 // Input type for a contributor when creating a project
+
+export type InvitationInput = {
+  invited_user_id: string;
+};
+
 export type ContributorInput = {
   userId: string; // The ID of the user to be added as a contributor
   role: RoleTS; // Optional role, must be one of the RoleTS values ('contributor' or 'manager')
@@ -19,5 +30,5 @@ export type ContributorInput = {
 export type CreateProjectInput = {
   name: string;
   description: string;
-  contributors?: ContributorInput[];
+  invitations?: InvitationInput[];
 };

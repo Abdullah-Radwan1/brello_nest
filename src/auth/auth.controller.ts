@@ -11,7 +11,7 @@ export class AuthController {
 
   @Public()
   @UseGuards(LocalAuthGuard) // uses validate from LocalStrategy
-  @Post('signin')
+  @Post('login')
   async login(@Req() req: Request, @Res() res: Response) {
     const user = req.user as any;
 
@@ -38,7 +38,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('signup')
+  @Post('register')
   async signup(@Body() dto: SignupDto, @Res() res: Response) {
     const { access_token } = await this.authService.signup(dto);
 
@@ -53,7 +53,7 @@ export class AuthController {
     return res.send({ message: 'User registered successfully' });
   }
 
-  @Post('signout')
+  @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
     // Clear the HTTP-only cookie
     res.clearCookie('access_token', {

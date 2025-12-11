@@ -6,7 +6,7 @@ import {
   IsArray,
   IsOptional,
 } from 'class-validator';
-import { ContributorInput } from 'src/db/types';
+import { ContributorInput, InvitationInput } from 'src/db/types';
 
 export class CreateProjectDto {
   @IsString()
@@ -20,5 +20,5 @@ export class CreateProjectDto {
 
   @IsArray()
   @IsOptional()
-  contributors?: ContributorInput[];
+  invitations: InvitationInput[];
 }

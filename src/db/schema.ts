@@ -14,6 +14,13 @@ export const TaskStatus = pgEnum('task_status', [
   'REVIEW',
   'DONE',
 ]);
+
+export const InvitationStatus = pgEnum('invitation_status', [
+  'PENDING',
+  'ACCEPTED',
+  'DECLINED',
+]);
+
 export const RoleEnum = pgEnum('role_enum', ['contributor', 'manager']);
 
 // ===== Users table =====
@@ -32,6 +39,26 @@ export const Project = pgTable('Project', {
   manager_id: uuid('manager_id')
     .notNull()
     .references(() => User.id), // ✔ correct
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const Invitation = pgTable('Invitation', {
+  id: uuid('id').primaryKey().defaultRandom(),
+
+  project_id: uuid('project_id')
+    .notNull()
+    .references(() => Project.id, { onDelete: 'cascade' }),
+
+  invited_user_id: uuid('invited_user_id')
+    .notNull()
+    .references(() => User.id, { onDelete: 'cascade' }),
+
+  inviter_id: uuid('inviter_id')
+    .notNull()
+    .references(() => User.id, { onDelete: 'cascade' }),
+
+  status: InvitationStatus('status').notNull().default('PENDING'),
+
   createdAt: timestamp('created_at').defaultNow(),
 });
 
