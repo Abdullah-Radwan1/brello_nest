@@ -1,21 +1,21 @@
 // src/users/users.service.ts
 import { Injectable } from '@nestjs/common';
 import { db } from 'src/db/drizzle';
-import { Contributor, User } from 'src/db/schema'; // ده الجدول اللي عملناه في drizzle.ts/schema
+import { Contributor, Invitation, Project, Task, User } from 'src/db/schema'; // ده الجدول اللي عملناه في drizzle.ts/schema
 import bcrypt from 'bcrypt';
-import { and, asc, eq, like, sql } from 'drizzle-orm';
+import { and, asc, count, eq, like, sql } from 'drizzle-orm';
 @Injectable()
 export class UsersService {
   async getAllUsers(
     page: number,
     limit: number,
     search: string,
-    currentUserId: string,
+    currentuser_id: string,
   ) {
     const offset = (page - 1) * limit;
 
     // Build where condition
-    let whereCondition: any = sql`${User.id} != ${currentUserId}`; // exclude current user
+    let whereCondition: any = sql`${User.id} != ${currentuser_id}`; // exclude current user
 
     if (search?.trim()) {
       whereCondition = and(
@@ -54,13 +54,6 @@ export class UsersService {
     };
   }
 
-  async getContributors(project_id: string) {
-    return await db
-      .select()
-      .from(Contributor)
-      .where(eq(Contributor.project_id, project_id));
-  }
-
   // البحث بالـ id بدل email
   async findOneBy(id: string) {
     const users = await db.select().from(User).where(eq(User.id, id));
@@ -80,5 +73,51 @@ export class UsersService {
   async findOneByEmail(email: string) {
     const users = await db.select().from(User).where(eq(User.email, email));
     return users[0]; // دلوقتي object مباشر
+  }
+
+  async overview(userId: string) {
+    const [projectCount, contributorsCount, taskCount, pendingInvitations] =
+      await Promise.all([
+        // Count projects managed by the user
+        db
+          .select({ total: count() })
+          .from(Project)
+          .where(eq(Project.manager_id, userId))
+          .then((res) => res[0]?.total || 0),
+
+        // Count contributors in projects managed by the user
+        db
+          .select({ total: count() })
+          .from(Contributor)
+          .innerJoin(Project, eq(Project.id, Contributor.project_id))
+          .where(eq(Project.manager_id, userId))
+          .then((res) => res[0]?.total || 0),
+
+        // Count tasks assigned to the user
+        db
+          .select({ total: count() })
+          .from(Task)
+          .where(eq(Task.assignee_id, userId))
+          .then((res) => res[0]?.total || 0),
+
+        // Count pending invitations for the user
+        db
+          .select({ total: count() })
+          .from(Invitation)
+          .where(
+            and(
+              eq(Invitation.invited_user_id, userId),
+              eq(Invitation.status, 'PENDING'),
+            ),
+          )
+          .then((res) => res[0]?.total || 0),
+      ]);
+
+    return {
+      projects: projectCount,
+      contributors: contributorsCount,
+      tasks: taskCount,
+      pendingInvitations,
+    };
   }
 }

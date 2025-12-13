@@ -54,13 +54,18 @@ export class AuthService {
       name,
       password,
     });
-    const user = createdUser[0];
+    const user = {
+      id: createdUser[0].id,
+      name: createdUser[0].name,
+      email: createdUser[0].email,
+    }; // plain object
     return {
       access_token: this.jwtService.sign({
         name: user.name,
         email: user.email,
         id: user.id,
       }),
+      user,
       message: 'User registered successfully',
     };
   }

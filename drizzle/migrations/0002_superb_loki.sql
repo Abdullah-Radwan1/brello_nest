@@ -1,0 +1,1 @@
+ALTER TABLE "Invitation" DROP COLUMN "message";

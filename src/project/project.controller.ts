@@ -20,13 +20,17 @@ export class ProjectController {
   @Post()
   create(@Request() req, @Body() createProjectDto: CreateProjectDto) {
     const currentUserId = req.user.id;
-    return this.projectService.createProject(createProjectDto, currentUserId);
+    const currnetUsername = req.user.name;
+    return this.projectService.createProject(
+      createProjectDto,
+      currentUserId,
+      currnetUsername,
+    );
   }
   @Get()
   findMyProjects(@Req() req) {
     return this.projectService.findMyProjects(req.user.id);
   }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.projectService.findOne(+id);

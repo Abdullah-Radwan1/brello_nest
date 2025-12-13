@@ -39,8 +39,12 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  async signup(@Body() dto: SignupDto, @Res() res: Response) {
-    const { access_token } = await this.authService.signup(dto);
+  async signup(
+    @Req() req: Request,
+    @Body() dto: SignupDto,
+    @Res() res: Response,
+  ) {
+    const { user, access_token } = await this.authService.signup(dto);
 
     res.cookie('access_token', access_token, {
       httpOnly: true,
@@ -50,7 +54,11 @@ export class AuthController {
       path: '/',
     });
 
-    return res.send({ message: 'User registered successfully' });
+    return res.send({
+      name: user.name,
+      email: user.email,
+      message: 'User registered successfully',
+    });
   }
 
   @Post('logout')

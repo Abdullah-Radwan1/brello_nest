@@ -27,15 +27,14 @@ export class UsersController {
     @Query('limit') limit: number = 6,
     @Query('search') search: string = '',
   ) {
-    const currentUserId = req.user.id;
-    return this.usersService.getAllUsers(page, limit, search, currentUserId);
+    const current_user_id = req.user.id;
+    return this.usersService.getAllUsers(page, limit, search, current_user_id);
   }
-
-  @Get('/contributors')
-  findAllContributors(@Body('project_id') project_id: string) {
-    return this.usersService.getContributors(project_id);
+  @Get('/overview')
+  overview(@Request() req) {
+    const current_user_id = req.user.id;
+    return this.usersService.overview(current_user_id);
   }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOneBy(id);

@@ -1,32 +1,51 @@
-// This is a TypeScript "enum-like" object for roles.
-// We define the allowed role values as constants to use for type safety and autocompletion.
-export const RoleEnumTS = {
-  CONTRIBUTOR: 'contributor', // Represents a standard contributor role
-  MANAGER: 'manager', // Represents a project manager role
-} as const; // 'as const' tells TypeScript these values are **readonly literals**, not just strings
+import { Invitation_enums, Notification_enums, Role_enums } from './schema';
 
-export const InvitationStatusEnumTS = {
-  PENDING: 'PENDING',
-  ACCEPTED: 'ACCEPTED',
-  DECLINED: 'DECLINED',
+// -------------------------
+// Invitation Status
+// -------------------------
+export const InvitationStatusTS = {
+  PENDING: Invitation_enums.enumValues[0],
+  ACCEPTED: Invitation_enums.enumValues[1],
+  DECLINED: Invitation_enums.enumValues[2],
 } as const;
-// This allows TypeScript to enforce valid role values wherever RoleTS is used.
-export type RoleTS = (typeof RoleEnumTS)[keyof typeof RoleEnumTS];
-export type InvitationStatusTS =
-  (typeof InvitationStatusEnumTS)[keyof typeof InvitationStatusEnumTS];
-// Input type for a contributor when creating a project
 
+export type InvitationStatus =
+  (typeof InvitationStatusTS)[keyof typeof InvitationStatusTS];
+
+// -------------------------
+// Notification Types
+// -------------------------
+export const NotificationTypeTS = {
+  INVITATION: Notification_enums.enumValues[0],
+  TASK_ASSIGNED: Notification_enums.enumValues[1],
+} as const;
+
+export type NotificationType =
+  (typeof NotificationTypeTS)[keyof typeof NotificationTypeTS];
+
+// -------------------------
+// Roles
+// -------------------------
+export const RoleEnumTS = {
+  CONTRIBUTOR: Role_enums.enumValues[0],
+  MANAGER: Role_enums.enumValues[1],
+} as const;
+
+export type RoleTS = (typeof RoleEnumTS)[keyof typeof RoleEnumTS];
+
+// -------------------------
+// Task Status
+// -------------------------
+export const TaskStatusTS = ['TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'] as const;
+export type TaskStatus = (typeof TaskStatusTS)[number];
+
+// -------------------------
+// Project Input Types
+// -------------------------
 export type InvitationInput = {
   invited_user_id: string;
 };
 
-export type ContributorInput = {
-  userId: string; // The ID of the user to be added as a contributor
-  role: RoleTS; // Optional role, must be one of the RoleTS values ('contributor' or 'manager')
-  // If not provided, you can default it to 'contributor' in your function
-};
-
-// Input type for creating a project
 export type CreateProjectInput = {
   name: string;
   description: string;
