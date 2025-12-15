@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { db } from 'src/db/drizzle';
 import { Contributor, Invitation, Project, Task, User } from 'src/db/schema'; // ده الجدول اللي عملناه في drizzle.ts/schema
 import bcrypt from 'bcrypt';
-import { and, asc, count, eq, like, sql } from 'drizzle-orm';
+import { and, asc, count, eq, ilike, like, sql } from 'drizzle-orm';
 @Injectable()
 export class UsersService {
   async getAllUsers(
@@ -20,7 +20,7 @@ export class UsersService {
     if (search?.trim()) {
       whereCondition = and(
         whereCondition,
-        like(User.name, `%${search.trim()}%`),
+        ilike(User.name, `%${search.trim()}%`),
       );
     }
 

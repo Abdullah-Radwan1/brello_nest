@@ -1,6 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { db } from 'src/db/drizzle';
-import { Contributor, Invitation, Notification, Project } from 'src/db/schema';
+import {
+  Contributor,
+  Invitation,
+  Notification,
+  Project,
+  Task,
+} from 'src/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import {
   CreateProjectInput,
@@ -70,7 +76,28 @@ export class ProjectService {
   }
 
   findMyProjects(userId: string) {
-    return db.select().from(Project).where(eq(Project.manager_id, userId));
+    return db
+      .select({
+        id: Project.id,
+        name: Project.name,
+        description: Project.description,
+        createdAt: Project.createdAt,
+
+        // 🔢 count contributors per project
+        contributorsCount: sql<number>`
+        COUNT(DISTINCT ${Contributor.id})
+      `.as('contributorsCount'),
+
+        // 🔢 count tasks per project
+        tasksCount: sql<number>`
+        COUNT(DISTINCT ${Task.id})
+      `.as('tasksCount'),
+      })
+      .from(Project)
+      .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
+      .leftJoin(Task, eq(Task.project_id, Project.id))
+      .where(eq(Project.manager_id, userId))
+      .groupBy(Project.id);
   }
 
   findOne(id: number) {

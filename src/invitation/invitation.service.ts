@@ -7,7 +7,7 @@ import {
   Project,
   User,
 } from 'src/db/schema';
-import { desc, eq, sql } from 'drizzle-orm';
+import { desc, eq, inArray } from 'drizzle-orm';
 import {
   InvitationStatus,
   InvitationStatusTS,
@@ -44,34 +44,33 @@ export class InvitationService {
     return invitations;
   }
 
-  async respondToInvitation(id: string, status: InvitationStatus) {
+  async respondToInvitation(
+    id: string,
+    status: 'ACCEPTED' | 'DECLINED', // runtime-safe enum string
+  ) {
     return await db.transaction(async (tx) => {
-      // 1️⃣ Update invitation status and return the updated row
+      // 1️⃣ Fetch the invitation row by ID
       const [invitation] = await tx
-        .update(Invitation)
-        .set({ status })
-        .where(eq(Invitation.id, id))
-        .returning();
-
-      if (!invitation) throw new Error('Invitation not found');
-
-      // 2️⃣ Create ALIASES for User table, We join User twice → inviter & invitee
-      const inviter = aliasedTable(User, 'inviter');
-      const invitee = aliasedTable(User, 'invitee');
-
-      // 3️⃣ Fetch inviter & invitee names in ONE SQL query
-      const [users] = await tx
-        .select({
-          inviterName: inviter.name,
-          inviteeName: invitee.name,
-        })
+        .select()
         .from(Invitation)
-        .innerJoin(inviter, eq(Invitation.inviter_id, inviter.id))
-        .innerJoin(invitee, eq(Invitation.invited_user_id, invitee.id))
-        .where(eq(Invitation.id, invitation.id));
+        .where(eq(Invitation.id, id));
 
-      // 4️⃣ If accepted → add invited user as contributor
-      if (status === InvitationStatusTS.ACCEPTED) {
+      if (!invitation) throw new Error('Invitation not found'); // if no invitation, throw
+
+      // 2️⃣ Fetch both inviter & invitee users using inArray (type-safe)
+      const users = await tx
+        .select({ id: User.id, name: User.name })
+        .from(User)
+        .where(
+          inArray(User.id, [invitation.inviter_id, invitation.invited_user_id]),
+        );
+
+      const inviter = users.find((u) => u.id === invitation.inviter_id); // find inviter
+      const invitee = users.find((u) => u.id === invitation.invited_user_id); // find invitee
+      if (!inviter || !invitee) throw new Error('User not found'); // sanity check
+
+      // 3️⃣ If invitation is accepted → add invited user as contributor
+      if (status === 'ACCEPTED') {
         await tx.insert(Contributor).values({
           project_id: invitation.project_id,
           user_id: invitation.invited_user_id,
@@ -79,28 +78,33 @@ export class InvitationService {
         });
       }
 
-      // 5️⃣ Notification for INVITED USER
-      await tx.insert(Notification).values({
-        user_id: invitation.invited_user_id,
-        type: NotificationTypeTS.INVITATION,
-        message:
-          status === InvitationStatusTS.ACCEPTED
-            ? `You joined ${users.inviterName}'s project`
-            : `You declined ${users.inviterName}'s invitation`,
-        link: `/projects/${invitation.project_id}`,
-      });
-      // 6️⃣ Notification for INVITER
-      await tx.insert(Notification).values({
-        user_id: invitation.inviter_id,
-        type: NotificationTypeTS.INVITATION,
-        message:
-          status === InvitationStatusTS.ACCEPTED
-            ? `${users.inviteeName} accepted your invitation`
-            : `${users.inviteeName} declined your invitation`,
-        link: `/projects/${invitation.project_id}`,
-      });
+      // 4️⃣ Create notifications for both inviter and invitee (batched insert)
+      await tx.insert(Notification).values([
+        {
+          user_id: invitation.invited_user_id,
+          type: NotificationTypeTS.INVITATION,
+          message:
+            status === 'ACCEPTED'
+              ? `You joined ${inviter.name}'s project`
+              : `You declined ${inviter.name}'s invitation`,
+          link: `/projects/${invitation.project_id}`,
+        },
+        {
+          user_id: invitation.inviter_id,
+          type: NotificationTypeTS.INVITATION,
+          message:
+            status === 'ACCEPTED'
+              ? `${invitee.name} accepted your invitation`
+              : `${invitee.name} declined your invitation`,
+          link: `/projects/${invitation.project_id}`,
+        },
+      ]);
 
-      return invitation;
+      // 5️⃣ Delete the invitation row after processing
+      await tx.delete(Invitation).where(eq(Invitation.id, invitation.id));
+
+      // 6️⃣ Return original invitation info with updated status (frontend-friendly)
+      return { ...invitation, status };
     });
   }
 }
