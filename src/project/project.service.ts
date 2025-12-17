@@ -6,6 +6,7 @@ import {
   Notification,
   Project,
   Task,
+  User,
 } from 'src/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import {
@@ -76,12 +77,55 @@ export class ProjectService {
   }
 
   findMyProjects(userId: string) {
+    return (
+      db
+        .select({
+          id: Project.id,
+          name: Project.name,
+          description: Project.description,
+          createdAt: Project.createdAt,
+          managerName: Project.name,
+          // 🔢 Count unique contributors linked to each project
+          // DISTINCT prevents duplicate counting caused by joins
+          contributorsCount: sql<number>`
+        COUNT(DISTINCT ${Contributor.id})
+      `.as('contributorsCount'),
+
+          // 🔢 Count unique tasks linked to each project
+          // DISTINCT prevents over-counting when contributors exist
+          tasksCount: sql<number>`
+        COUNT(DISTINCT ${Task.id})
+      `.as('tasksCount'),
+        })
+
+        // 📦 Main table: projects
+        .from(Project)
+
+        // 🔗 LEFT JOIN contributors
+        // Keeps projects even if they have NO contributors
+        .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
+
+        // 🔗 LEFT JOIN tasks
+        // Keeps projects even if they have NO tasks
+        .leftJoin(Task, eq(Task.project_id, Project.id))
+
+        // 🎯 Filter projects managed by the current user
+        .where(eq(Project.manager_id, userId))
+
+        // 📊 GROUP BY project
+        // Required because we use COUNT() aggregations
+        .groupBy(Project.id)
+    );
+  }
+
+  async findOne(Project_id: string) {
     return db
       .select({
         id: Project.id,
         name: Project.name,
         description: Project.description,
         createdAt: Project.createdAt,
+        managerName: User.name,
 
         // 🔢 count contributors per project
         contributorsCount: sql<number>`
@@ -96,12 +140,11 @@ export class ProjectService {
       .from(Project)
       .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
       .leftJoin(Task, eq(Task.project_id, Project.id))
-      .where(eq(Project.manager_id, userId))
-      .groupBy(Project.id);
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} project`;
+      .leftJoin(User, eq(User.id, Project.manager_id))
+      .where(eq(Project.id, Project_id))
+      .groupBy(Project.id, User.id)
+      .limit(1)
+      .then((rows) => rows[0] ?? null);
   }
 
   update(id: number, updateProjectDto: any) {

@@ -6,7 +6,7 @@ import {
 import { CreateContributorDto } from './dto/create-contributor.dto';
 import { UpdateContributorDto } from './dto/update-contributor.dto';
 import { db } from 'src/db/drizzle';
-import { Contributor, Project } from 'src/db/schema';
+import { Contributor, Project, User } from 'src/db/schema';
 import { eq, inArray } from 'drizzle-orm';
 
 @Injectable()
@@ -17,8 +17,14 @@ export class ContributorsService {
 
   async getContributors(project_id: string) {
     return await db
-      .select()
+      .select({
+        user_id: User.id,
+        name: User.name, // user’s name
+        role: Contributor.role, // role in the project
+      })
       .from(Contributor)
+      .leftJoin(User, eq(User.id, Contributor.user_id))
+
       .where(eq(Contributor.project_id, project_id));
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Query } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { db } from 'src/db/drizzle';
@@ -20,7 +20,10 @@ export class TaskService {
     return task;
   }
 
-  async findAll(project_id: string) {
+  async findAll(@Query('project_id') project_id: string) {
+    if (!project_id) {
+      throw new NotFoundException('no id found');
+    }
     return db.select().from(Task).where(eq(Task.project_id, project_id));
   }
 

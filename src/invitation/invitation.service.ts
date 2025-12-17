@@ -15,10 +15,22 @@ import {
   RoleEnumTS,
 } from 'src/db/types';
 import { aliasedTable } from 'drizzle-orm';
+import { CreateInvitationDto } from './dto/create-invitation.dto';
 
 @Injectable()
 export class InvitationService {
-  async getInvitations(page: number, userId: string) {
+  async createInvitation(
+    CreateInvitationDto: CreateInvitationDto,
+    inviter_id: string,
+  ) {
+    db.insert(Invitation).values({
+      inviter_id,
+      invited_user_id: CreateInvitationDto.invited_id,
+      project_id: CreateInvitationDto.project_id,
+    });
+  }
+
+  async getUserInvitations(page: number, user_id: string) {
     const limit = 5;
     const offset = (page - 1) * limit;
 
@@ -36,14 +48,14 @@ export class InvitationService {
       .from(Invitation)
       .innerJoin(User, eq(User.id, Invitation.inviter_id))
       .innerJoin(Project, eq(Project.id, Invitation.project_id))
-      .where(eq(Invitation.invited_user_id, userId))
+      .where(eq(Invitation.invited_user_id, user_id))
       .orderBy(desc(Invitation.createdAt))
       .limit(limit)
       .offset(offset);
 
     return invitations;
   }
-
+  getProjectInvitations(project_id: string) {}
   async respondToInvitation(
     id: string,
     status: 'ACCEPTED' | 'DECLINED', // runtime-safe enum string

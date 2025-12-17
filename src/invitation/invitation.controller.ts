@@ -6,9 +6,12 @@ import {
   Param,
   Request,
   Query,
+  Post,
 } from '@nestjs/common';
 import { InvitationService } from './invitation.service';
 import { IsEnum } from 'class-validator';
+import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { CreateContributorDto } from 'src/contributors/dto/create-contributor.dto';
 
 // ✅ Runtime-safe string enum for invitation status
 export const InvitationStatusTS = ['ACCEPTED', 'DECLINED'] as const;
@@ -27,19 +30,26 @@ export class RespondInvitationDto {
 export class InvitationController {
   constructor(private readonly invitationService: InvitationService) {}
 
-  // ---------------------------
-  // GET /invitation?page=1
+  @Post()
+  createInvitaion(
+    @Request() req,
+    @Body() CreateInvitationDto: CreateInvitationDto,
+  ) {
+    const currentUserId = req.user.id; // inviter_id
+    return this.invitationService.createInvitation(
+      CreateInvitationDto,
+      currentUserId,
+    );
+  }
   // Fetch all invitations for the current user, paginated
   // ---------------------------
   @Get()
   getInvitations(@Query('page') page = '1', @Request() req) {
     const currentUserId = req.user.id; // current logged-in user
     const pageNumber = Number(page) || 1; // fallback to page 1
-    return this.invitationService.getInvitations(pageNumber, currentUserId);
+    return this.invitationService.getUserInvitations(pageNumber, currentUserId);
   }
 
-  // ---------------------------
-  // PATCH /invitation/:id
   // Accept or decline an invitation
   // ---------------------------
   @Patch(':id')
