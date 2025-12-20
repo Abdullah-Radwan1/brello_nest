@@ -26,7 +26,7 @@ export class RespondInvitationDto {
   status: InvitationStatusTS;
 }
 
-@Controller('invitation')
+@Controller('invitations')
 export class InvitationController {
   constructor(private readonly invitationService: InvitationService) {}
 
@@ -50,6 +50,10 @@ export class InvitationController {
     return this.invitationService.getUserInvitations(pageNumber, currentUserId);
   }
 
+  @Get('/project')
+  getProjectInvitations(@Query('project_id') project_id: string) {
+    return this.invitationService.getProjectInvitationsfunc(project_id);
+  }
   // Accept or decline an invitation
   // ---------------------------
   @Patch(':id')

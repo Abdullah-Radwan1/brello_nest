@@ -90,7 +90,7 @@ export class UsersService {
           .select({ total: count() })
           .from(Contributor)
           .innerJoin(Project, eq(Project.id, Contributor.project_id))
-          .where(eq(Project.manager_id, userId))
+          .where(eq(Project.manager_id, userId)) // todo , remove the manager count
           .then((res) => res[0]?.total || 0),
 
         // Count tasks assigned to the user

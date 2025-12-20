@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { db } from 'src/db/drizzle';
 import {
   Contributor,
@@ -7,14 +7,9 @@ import {
   Project,
   User,
 } from 'src/db/schema';
-import { desc, eq, inArray } from 'drizzle-orm';
-import {
-  InvitationStatus,
-  InvitationStatusTS,
-  NotificationTypeTS,
-  RoleEnumTS,
-} from 'src/db/types';
-import { aliasedTable } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
+import { NotificationTypeTS, RoleEnumTS } from 'src/db/types';
+
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 
 @Injectable()
@@ -23,9 +18,22 @@ export class InvitationService {
     CreateInvitationDto: CreateInvitationDto,
     inviter_id: string,
   ) {
-    db.insert(Invitation).values({
+    const existed_invitation = await db
+      .select()
+      .from(Invitation)
+      .where(
+        and(
+          eq(Invitation.inviter_id, inviter_id),
+          eq(Invitation.invited_user_id, CreateInvitationDto.invited_user_id), //todo, select in a project
+          eq(Invitation.project_id, CreateInvitationDto.project_id), // Add this if invitations should be unique per project
+        ),
+      );
+    if (existed_invitation[0]) {
+      throw new UnauthorizedException('Invitation already have been sent');
+    }
+    await db.insert(Invitation).values({
       inviter_id,
-      invited_user_id: CreateInvitationDto.invited_id,
+      invited_user_id: CreateInvitationDto.invited_user_id,
       project_id: CreateInvitationDto.project_id,
     });
   }
@@ -38,8 +46,8 @@ export class InvitationService {
       .select({
         invitationId: Invitation.id,
         status: Invitation.status,
-        sentAt: Invitation.createdAt,
-
+        CreatedAt: Invitation.createdAt,
+        email: User.email,
         inviterName: User.name,
 
         projectName: Project.name,
@@ -55,7 +63,18 @@ export class InvitationService {
 
     return invitations;
   }
-  getProjectInvitations(project_id: string) {}
+  async getProjectInvitationsfunc(project_id: string) {
+    return db
+      .select({
+        email: User.email,
+        name: User.name,
+        status: Invitation.status,
+        CreatedAt: Invitation.createdAt,
+      })
+      .from(Invitation)
+      .leftJoin(User, eq(User.id, Invitation.invited_user_id))
+      .where(eq(Invitation.project_id, project_id));
+  }
   async respondToInvitation(
     id: string,
     status: 'ACCEPTED' | 'DECLINED', // runtime-safe enum string

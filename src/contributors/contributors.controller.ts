@@ -7,10 +7,13 @@ import {
   Param,
   Delete,
   Query,
+  Request,
 } from '@nestjs/common';
 import { ContributorsService } from './contributors.service';
 import { CreateContributorDto } from './dto/create-contributor.dto';
 import { UpdateContributorDto } from './dto/update-contributor.dto';
+import { RemoveContributorsDto } from './dto/delete-contributor.dto';
+import { CurrentUser } from 'src/db/current-user.decorator';
 
 @Controller('contributors')
 export class ContributorsController {
@@ -41,10 +44,9 @@ export class ContributorsController {
 
   @Delete()
   removeMany(
-    @Body('ids') ids: string[],
-    manager_id: string,
-    project_id: string,
+    @CurrentUser() user: { id: string },
+    @Body() dto: RemoveContributorsDto,
   ) {
-    return this.contributorsService.removeMany(ids, manager_id, project_id);
+    return this.contributorsService.removeMany(dto, user.id);
   }
 }

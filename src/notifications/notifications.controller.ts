@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Request } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 
@@ -13,9 +13,11 @@ export class NotificationsController {
 
   @Get()
   findAll(
+    @Request() req,
     @Query('page') page = '1', // default to page 1
   ) {
+    const current_user_id = req.user.id;
     const pageNum = parseInt(page);
-    return this.notificationsService.findAll(pageNum);
+    return this.notificationsService.findAll(current_user_id, pageNum);
   }
 }

@@ -50,7 +50,7 @@ export class ProjectService {
       role: RoleEnumTS.MANAGER,
     });
 
-    // 3️⃣ Add contributors & notifications
+    // 3️⃣ Add invitations & notifications
     if (data.invitations?.length) {
       // Insert invitations
       await db.insert(Invitation).values(

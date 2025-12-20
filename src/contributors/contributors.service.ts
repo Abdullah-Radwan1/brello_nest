@@ -8,6 +8,7 @@ import { UpdateContributorDto } from './dto/update-contributor.dto';
 import { db } from 'src/db/drizzle';
 import { Contributor, Project, User } from 'src/db/schema';
 import { eq, inArray } from 'drizzle-orm';
+import { RemoveContributorsDto } from './dto/delete-contributor.dto';
 
 @Injectable()
 export class ContributorsService {
@@ -18,9 +19,10 @@ export class ContributorsService {
   async getContributors(project_id: string) {
     return await db
       .select({
-        user_id: User.id,
+        id: User.id,
         name: User.name, // user’s name
         role: Contributor.role, // role in the project
+        email: User.email,
       })
       .from(Contributor)
       .leftJoin(User, eq(User.id, Contributor.user_id))
@@ -36,11 +38,8 @@ export class ContributorsService {
     return `This action updates a #${id} contributor`;
   }
 
-  async removeMany(
-    contributorIds: string[],
-    manager_id: string,
-    project_id: string,
-  ) {
+  async removeMany(dto: RemoveContributorsDto, user_id: string) {
+    const { contributor_ids, project_id } = dto;
     // 1. get only manager_id instead of full project
     const [project] = await db
       .select({
@@ -54,7 +53,7 @@ export class ContributorsService {
     }
 
     // 2. check manager
-    if (project.manager_id !== manager_id) {
+    if (project.manager_id !== user_id) {
       throw new ForbiddenException(
         'Only the project manager can delete contributors.',
       );
@@ -63,7 +62,7 @@ export class ContributorsService {
     // 3. delete contributors
     return db
       .delete(Contributor)
-      .where(inArray(Contributor.id, contributorIds))
+      .where(inArray(Contributor.user_id, contributor_ids))
       .returning();
   }
 }
