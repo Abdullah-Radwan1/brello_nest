@@ -39,6 +39,8 @@ export type RoleTS = (typeof RoleEnumTS)[keyof typeof RoleEnumTS];
 export const TaskStatusTS = ['TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'] as const;
 export type TaskStatus = (typeof TaskStatusTS)[number];
 
+export const TaskPriorityTs = ['LOW', 'NORMAL', 'URGENT'] as const;
+export type TaskPriority = (typeof TaskPriorityTs)[number];
 // -------------------------
 // Project Input Types
 // -------------------------

@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  Request,
 } from '@nestjs/common';
 import { ContributorsService } from './contributors.service';
 import { CreateContributorDto } from './dto/create-contributor.dto';

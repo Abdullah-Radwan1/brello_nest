@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException, Query } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  Query,
+} from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { db } from 'src/db/drizzle';
-import { Notification, Task } from 'src/db/schema';
-import { eq } from 'drizzle-orm';
+import { Contributor, Notification, Task, User } from 'src/db/schema';
+import { and, eq } from 'drizzle-orm';
 
 @Injectable()
 export class TaskService {
@@ -24,7 +29,27 @@ export class TaskService {
     if (!project_id) {
       throw new NotFoundException('no id found');
     }
-    return db.select().from(Task).where(eq(Task.project_id, project_id));
+    const tasks = await db
+      .select({
+        id: Task.id,
+        title: Task.title,
+        description: Task.description,
+        status: Task.status,
+        project_id: Task.project_id,
+        assignee_id: Task.assignee_id,
+        priority: Task.priority,
+        start_date: Task.start_date,
+        end_date: Task.end_date,
+        assignee: {
+          id: User.id,
+          name: User.name,
+          email: User.email,
+        },
+      })
+      .from(Task)
+      .leftJoin(User, eq(Task.assignee_id, User.id))
+      .where(eq(Task.project_id, project_id));
+    return tasks;
   }
 
   async findOne(id: string) {
@@ -44,9 +69,39 @@ export class TaskService {
     return updated;
   }
 
-  async remove(id: string) {
-    const [deleted] = await db.delete(Task).where(eq(Task.id, id)).returning();
-    if (!deleted) throw new NotFoundException('Task not found');
+  async remove(taskId: string, userId: string) {
+    const [task] = await db
+      .select({
+        id: Task.id,
+        project_id: Task.project_id,
+      })
+      .from(Task)
+      .where(eq(Task.id, taskId));
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    const [isAdmin] = await db
+      .select()
+      .from(Contributor)
+      .where(
+        and(
+          eq(Contributor.project_id, task.project_id),
+          eq(Contributor.user_id, userId),
+          eq(Contributor.role, 'manager'),
+        ),
+      );
+
+    if (!isAdmin) {
+      throw new ForbiddenException('Only project admins can delete tasks');
+    }
+
+    const [deleted] = await db
+      .delete(Task)
+      .where(eq(Task.id, taskId))
+      .returning();
+
     return deleted;
   }
 }

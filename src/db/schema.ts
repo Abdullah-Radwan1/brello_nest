@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   pgEnum,
+  boolean,
 } from 'drizzle-orm/pg-core';
 
 // ===== ENUMS =====
@@ -28,12 +29,28 @@ export const Notification_enums = pgEnum('notification_enums', [
 
 export const Role_enums = pgEnum('role_enum', ['contributor', 'manager']);
 
+export const TaskPriorityEnum = pgEnum('task_priority', [
+  'LOW',
+  'NORMAL',
+  'URGENT',
+]);
+export const ColorEnum = pgEnum('color_enums', [
+  'RED',
+  'BLUE',
+  'PURPLE',
+  'BLUE',
+  'PINK',
+  'GREEN',
+  'ROYALBLUE',
+]);
 // ===== USERS =====
 export const User = pgTable('User', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
   name: varchar('name', { length: 255 }).notNull(),
+  allow_invitations: boolean().default(true),
+  color: ColorEnum('color').notNull().default('PURPLE'), // uses color_enum now
 });
 
 // ===== PROJECTS =====
@@ -62,15 +79,26 @@ export const Contributor = pgTable('Contributor', {
 // ===== TASKS =====
 export const Task = pgTable('Task', {
   id: uuid('id').primaryKey().defaultRandom(),
+
   title: varchar('title', { length: 255 }).notNull(),
+
   description: text('description'),
+
   status: Task_enums('status').notNull().default('TODO'),
+
+  priority: TaskPriorityEnum('priority').notNull().default('NORMAL'),
+
+  start_date: timestamp('start_date', { mode: 'string' }),
+  end_date: timestamp('end_date', { mode: 'string' }),
+
   project_id: uuid('project_id')
     .notNull()
     .references(() => Project.id, { onDelete: 'cascade' }),
+
   assignee_id: uuid('assignee_id').references(() => User.id, {
     onDelete: 'set null',
   }),
+
   createdAt: timestamp('created_at').defaultNow(),
 });
 

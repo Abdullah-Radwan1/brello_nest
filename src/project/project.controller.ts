@@ -12,6 +12,7 @@ import {
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { CurrentUser } from 'src/db/current-user.decorator';
 
 @Controller('projects')
 export class ProjectController {
@@ -27,13 +28,14 @@ export class ProjectController {
       currnetUsername,
     );
   }
+
   @Get()
+  findProjects(@Req() req) {
+    return this.projectService.findProjects(req.user.id);
+  }
+  @Get('/myProjects')
   findMyProjects(@Req() req) {
     return this.projectService.findMyProjects(req.user.id);
-  }
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectService.findOne(id);
   }
 
   @Patch(':id')
@@ -44,5 +46,9 @@ export class ProjectController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.projectService.remove(id);
+  }
+  @Get(':id')
+  findOne(@Param('id') id: string, @CurrentUser() user) {
+    return this.projectService.findOne(id, user.id);
   }
 }

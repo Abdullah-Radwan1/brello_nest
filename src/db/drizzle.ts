@@ -1,15 +1,20 @@
+// db/drizzle.ts
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
+import * as schema from './schema';
+import dotenv from 'dotenv';
 
-// Neon/Postgres cloud يحتاج SSL صريح
-const sql = postgres(
-  'postgresql://neondb_owner:npg_rjy1htLqpoN9@ep-patient-moon-ad7ti7l3-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
-  {
-    ssl: { rejectUnauthorized: false }, // مهم
-  },
-);
+dotenv.config(); // <-- load .env here
+// 1. First, create the postgres.js client
+const sql = postgres(process.env.DATABASE_URL!, {
+  ssl: 'require', // This is the key parameter
+  // You can also use an object for more control:
+  // ssl: { rejectUnauthorized: false } // Use with caution, only for development with self-signed certs
+});
 
-export const db = drizzle(sql);
+// 2. Then, pass the client to drizzle
+export const db = drizzle(sql, { schema });
+const result = db.execute('select 1');
 
 // import { Pool } from 'pg';
 // import { drizzle } from 'drizzle-orm/node-postgres';

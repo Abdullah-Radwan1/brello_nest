@@ -6,9 +6,12 @@ import {
   Param,
   Query,
   Request,
+  Put,
 } from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
+import { UpdateUserDto } from './dto/update-user.dto.js';
+import { CurrentUser } from 'src/db/current-user.decorator';
 // import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
@@ -34,6 +37,10 @@ export class UsersController {
   overview(@Request() req) {
     const current_user_id = req.user.id;
     return this.usersService.overview(current_user_id);
+  }
+  @Put('/updateUser')
+  update(@CurrentUser() user, @Body() dto: UpdateUserDto) {
+    return this.usersService.updateUser(user.id, dto);
   }
   @Get(':id')
   findOne(@Param('id') id: string) {

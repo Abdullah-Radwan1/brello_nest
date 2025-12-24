@@ -1,9 +1,18 @@
-import { Body, Controller, Post, UseGuards, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  UseGuards,
+  Req,
+  Res,
+  Get,
+} from '@nestjs/common';
 import { LocalAuthGuard } from './local.auth.guard';
 import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
 import type { Request, Response } from 'express';
 import { SignupDto } from './dto/login.dto';
+import { CurrentUser } from 'src/db/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -71,5 +80,10 @@ export class AuthController {
     });
 
     return { message: 'Logged out successfully' };
+  }
+
+  @Get('me')
+  whoAmI(@CurrentUser() user) {
+    return user;
   }
 }

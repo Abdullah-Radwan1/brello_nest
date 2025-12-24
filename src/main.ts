@@ -3,9 +3,12 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard } from './auth/jwt.auth.guard.js';
+import dotenv from 'dotenv';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  dotenv.config(); // <-- load .env here
   // parse cookies so `request.cookies` is populated (used by JwtStrategy)
   app.use(cookieParser());
   app.enableCors({

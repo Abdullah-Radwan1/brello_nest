@@ -19,7 +19,7 @@ export class ContributorsService {
   async getContributors(project_id: string) {
     return await db
       .select({
-        id: User.id,
+        user_id: User.id,
         name: User.name, // user’s name
         role: Contributor.role, // role in the project
         email: User.email,

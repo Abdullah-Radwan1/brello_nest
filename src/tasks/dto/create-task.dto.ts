@@ -1,4 +1,3 @@
-import { Invitation_enums, Task_enums } from 'src/db/schema';
 import {
   IsEnum,
   IsOptional,
@@ -6,20 +5,31 @@ import {
   IsUUID,
   IsNotEmpty,
 } from 'class-validator';
-import { TaskStatusTS } from 'src/db/types';
-import type { TaskStatus } from 'src/db/types';
+import { TaskPriorityTs, TaskStatusTS } from 'src/db/types';
+import type { TaskPriority, TaskStatus } from 'src/db/types';
 export class CreateTaskDto {
   @IsString()
   @IsNotEmpty()
   title: string;
 
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   description?: string;
 
   @IsEnum(TaskStatusTS)
   @IsOptional()
-  status?: TaskStatus;
+  status?: 'TODO';
+
+  @IsEnum(TaskPriorityTs)
+  priority: TaskPriority; // ✅ FIXED (NOT string)
+
+  @IsString()
+  @IsOptional()
+  start_date?: string;
+
+  @IsString()
+  @IsOptional()
+  end_date?: string;
 
   @IsUUID()
   @IsNotEmpty()
