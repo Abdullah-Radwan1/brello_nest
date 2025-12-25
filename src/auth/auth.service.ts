@@ -2,6 +2,9 @@ import { Injectable, Res, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { db } from 'src/db/drizzle';
+import { User } from 'src/db/schema';
+import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +35,11 @@ export class AuthService {
     id: string;
   }) {
     return {
-      access_token: this.jwtService.sign({ name, id, email }),
+      access_token: this.jwtService.sign({
+        name,
+        id,
+        email,
+      }),
     };
   }
 
@@ -68,5 +75,19 @@ export class AuthService {
       user,
       message: 'User registered successfully',
     };
+  }
+  async whoAmI(user) {
+    const [row] = await db
+      .select({
+        id: User.id,
+        name: User.name,
+        email: User.email,
+        allow_invitations: User.allow_invitations,
+      })
+      .from(User)
+      .where(eq(User.id, user.id))
+      .limit(1);
+
+    return row;
   }
 }

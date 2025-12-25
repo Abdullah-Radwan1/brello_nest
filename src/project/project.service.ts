@@ -8,7 +8,7 @@ import {
   Task,
   User,
 } from 'src/db/schema';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, or, sql } from 'drizzle-orm';
 import {
   CreateProjectInput,
   InvitationStatusTS,
@@ -76,7 +76,7 @@ export class ProjectService {
     return createdProject;
   }
 
-  findMyProjects(user_id: string) {
+  findAllMyProjects(user_id: string) {
     return (
       db
         .select({
@@ -85,81 +85,38 @@ export class ProjectService {
           description: Project.description,
           createdAt: Project.createdAt,
           managerName: User.name,
-          // 🔢 Count unique contributors linked to each project
-          // DISTINCT prevents duplicate counting caused by joins
+
+          role: sql<'manager' | 'contributor'>`
+        CASE
+          WHEN ${Project.manager_id} = ${user_id} THEN 'manager'
+          ELSE ${Contributor.role}
+        END
+      `.as('role'),
+
           contributorsCount: sql<number>`
         COUNT(DISTINCT ${Contributor.id})
       `.as('contributorsCount'),
 
-          // 🔢 Count unique tasks linked to each project
-          // DISTINCT prevents over-counting when contributors exist
           tasksCount: sql<number>`
         COUNT(DISTINCT ${Task.id})
       `.as('tasksCount'),
         })
-
-        // 📦 Main table: projects
         .from(Project)
-        // 👇 REQUIRED
+
+        // manager info
         .leftJoin(User, eq(Project.manager_id, User.id))
-        // 🔗 LEFT JOIN contributors
-        // Keeps projects even if they have NO contributors
+
+        // contributors (including current user)
         .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
 
-        // 🔗 LEFT JOIN tasks
-        // Keeps projects even if they have NO tasks
         .leftJoin(Task, eq(Task.project_id, Project.id))
 
-        // 🎯 Filter projects managed by the current user
-        .where(eq(Project.manager_id, user_id))
-
-        // 📊 GROUP BY project
-        // Required because we use COUNT() aggregations
-        .groupBy(Project.id, User.id)
-    );
-  }
-  findProjects(user_id: string) {
-    return (
-      db
-        .select({
-          id: Project.id,
-          name: Project.name,
-          description: Project.description,
-          createdAt: Project.createdAt,
-          managerName: User.name, // Get manager's name instead of project name
-          // 🔢 Count unique contributors linked to each project
-          contributorsCount: sql<number>`
-          COUNT(DISTINCT ${Contributor.id})
-        `.as('contributorsCount'),
-
-          // 🔢 Count unique tasks linked to each project
-          tasksCount: sql<number>`
-          COUNT(DISTINCT ${Task.id})
-        `.as('tasksCount'),
-        })
-
-        // 📦 Main table: projects
-        .from(Project)
-
-        // 🔗 JOIN contributors to find projects user contributes to
-        .innerJoin(Contributor, eq(Contributor.project_id, Project.id))
-
-        // 🔗 JOIN users to get manager's name (assuming Project.manager_id exists)
-        .leftJoin(User, eq(Project.manager_id, User.id))
-
-        // 🔗 LEFT JOIN tasks for counting
-        .leftJoin(Task, eq(Task.project_id, Project.id))
-
-        // 🎯 Filter projects where user is a contributor
+        // 👇 مهم جدًا
         .where(
-          and(
-            eq(Contributor.user_id, user_id),
-            eq(Contributor.role, 'contributor'), // 👈 IMPORTANT
-          ),
+          or(eq(Project.manager_id, user_id), eq(Contributor.user_id, user_id)),
         )
 
-        // 📊 GROUP BY project
-        .groupBy(Project.id, User.name) // Add User.name to GROUP BY
+        .groupBy(Project.id, User.name, Contributor.role)
     );
   }
   async findOne(Project_id: string, user_id: string) {

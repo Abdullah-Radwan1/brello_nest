@@ -81,64 +81,81 @@ export class UsersService {
   }
 
   async updateUser(id: string, dto: UpdateUserDto) {
-    // Fetch existing user
+    console.log('updateUser called with id:', id, 'dto:', dto);
     const userRecord = await db.select().from(User).where(eq(User.id, id));
     const existingUser = userRecord[0];
     if (!existingUser) throw new NotFoundException('User not found');
 
-    const updateData: any = { ...dto };
-    console.log('test', dto.current_password);
-    // Handle password update
-    if (dto.current_password || dto.new_password || dto.confirm_new_password) {
+    const updateData: Partial<typeof User.$inferInsert> = {};
+
+    // ===============================
+    // NORMAL FIELDS
+    // ===============================
+    if (dto.name !== undefined) {
+      updateData.name = dto.name;
+    }
+
+    if (dto.email !== undefined) {
+      updateData.email = dto.email;
+    }
+
+    if (dto.allow_invitations !== undefined) {
+      updateData.allow_invitations = dto.allow_invitations;
+    }
+
+    console.log('updateData before password:', updateData);
+
+    // ===============================
+    // PASSWORD UPDATE
+    // ===============================
+    const wantsPasswordChange =
+      dto.current_password || dto.new_password || dto.confirm_new_password;
+
+    if (wantsPasswordChange) {
       if (!dto.current_password) {
-        throw new BadRequestException(
-          'Current password is required to change password',
-        );
+        throw new BadRequestException('Current password is required');
       }
 
-      // Verify current password
       const isMatch = await bcrypt.compare(
         dto.current_password,
         existingUser.password,
       );
-      if (!isMatch)
-        throw new BadRequestException('Current password is incorrect');
 
-      // Check new password & confirm
+      if (!isMatch) {
+        throw new BadRequestException('Current password is incorrect');
+      }
+
       if (!dto.new_password || !dto.confirm_new_password) {
         throw new BadRequestException(
           'New password and confirmation are required',
         );
       }
+
       if (dto.new_password !== dto.confirm_new_password) {
-        throw new BadRequestException(
-          'New password and confirmation do not match',
-        );
+        throw new BadRequestException('Passwords do not match');
       }
 
-      // Hash new password
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(dto.new_password, salt);
     }
 
-    // Remove password fields that should not be directly saved
-    delete updateData.current_password;
-    delete updateData.new_password;
-    delete updateData.confirm_new_password;
+    console.log('updateData after password:', updateData);
 
-    // Check if anything is left to update
+    // 🚨 IMPORTANT: nothing to update
     if (Object.keys(updateData).length === 0) {
-      throw new BadRequestException('No fields to update');
+      console.log('Nothing to update');
+      return existingUser;
     }
 
-    // Update other fields
-    const updatedUser = await db
+    console.log('Updating user with:', updateData);
+    const [updatedUser] = await db
       .update(User)
       .set(updateData)
       .where(eq(User.id, id))
       .returning();
 
-    return updatedUser[0];
+    console.log('Updated user:', updatedUser);
+    return updatedUser;
   }
 
   async overview(userId: string) {

@@ -31,11 +31,7 @@ export class ProjectController {
 
   @Get()
   findProjects(@Req() req) {
-    return this.projectService.findProjects(req.user.id);
-  }
-  @Get('/myProjects')
-  findMyProjects(@Req() req) {
-    return this.projectService.findMyProjects(req.user.id);
+    return this.projectService.findAllMyProjects(req.user.id);
   }
 
   @Patch(':id')
