@@ -15,9 +15,11 @@ import {
   NotificationTypeTS,
   RoleEnumTS,
 } from 'src/db/types';
+import { assertionService } from 'src/assertion/assertion.service';
 
 @Injectable()
 export class ProjectService {
+  constructor(private readonly projectAuth: assertionService) {}
   async createProject(
     data: CreateProjectInput,
     currentuser_id: string,
@@ -85,7 +87,7 @@ export class ProjectService {
           description: Project.description,
           createdAt: Project.createdAt,
           managerName: User.name,
-
+          icon: Project.icon,
           role: sql<'manager' | 'contributor'>`
         CASE
           WHEN ${Project.manager_id} = ${user_id} THEN 'manager'
@@ -142,17 +144,27 @@ export class ProjectService {
       .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
       .leftJoin(Task, eq(Task.project_id, Project.id))
       .leftJoin(User, eq(User.id, Project.manager_id))
-      .where(and(eq(Project.id, Project_id), eq(Contributor.user_id, user_id)))
+      .where(
+        and(
+          eq(Project.id, Project_id),
+          or(eq(Project.manager_id, user_id), eq(Contributor.user_id, user_id)),
+        ),
+      )
       .groupBy(Project.id, User.id)
       .limit(1)
       .then((rows) => rows[0] ?? null);
   }
 
-  update(id: number, updateProjectDto: any) {
-    return `This action updates a #${id} project`;
+  async update(user_id: string, proejct_id: string, updateProjectDto: any) {
+    await this.projectAuth.assertManager(proejct_id, user_id);
+    return db
+      .update(Project)
+      .set(updateProjectDto)
+      .where(eq(Project.id, proejct_id));
   }
 
-  remove(id: string) {
-    return db.delete(Project).where(eq(Project.id, id));
+  async remove(user_id: string, proejct_id: string) {
+    await this.projectAuth.assertManager(user_id, proejct_id);
+    return db.delete(Project).where(eq(Project.id, proejct_id));
   }
 }

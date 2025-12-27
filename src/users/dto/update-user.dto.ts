@@ -7,6 +7,7 @@ import {
   IsBoolean,
   IsEmail,
 } from 'class-validator';
+import type { UserColorType } from 'src/db/schema';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
@@ -33,4 +34,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
   @IsBoolean()
   allow_invitations?: boolean;
+
+  @IsOptional()
+  color: UserColorType;
 }

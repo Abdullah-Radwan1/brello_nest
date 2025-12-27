@@ -35,13 +35,17 @@ export class ProjectController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update(+id, updateProjectDto);
+  update(
+    @CurrentUser() user,
+    @Param('id') proejct_id: string,
+    @Body() updateProjectDto: UpdateProjectDto,
+  ) {
+    return this.projectService.update(user.id, proejct_id, updateProjectDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.projectService.remove(id);
+  remove(@CurrentUser() user, @Param('id') id: string) {
+    return this.projectService.remove(user.id, id);
   }
   @Get(':id')
   findOne(@Param('id') id: string, @CurrentUser() user) {

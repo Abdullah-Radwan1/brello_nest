@@ -1,0 +1,2 @@
+CREATE TYPE "public"."project_icon_enum" AS ENUM('folder', 'briefcase', 'rocket', 'target', 'database', 'users', 'globe', 'settings');--> statement-breakpoint
+ALTER TABLE "Project" ADD COLUMN "icon" "project_icon_enum" DEFAULT 'folder' NOT NULL;

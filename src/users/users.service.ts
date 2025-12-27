@@ -9,8 +9,10 @@ import { Contributor, Invitation, Project, Task, User } from 'src/db/schema'; //
 import bcrypt from 'bcrypt';
 import { and, asc, count, eq, ilike, like, ne, sql } from 'drizzle-orm';
 import { UpdateUserDto } from './dto/update-user.dto';
+
 @Injectable()
 export class UsersService {
+  constructor() {}
   async getAllUsers(
     page: number,
     limit: number,
@@ -60,8 +62,8 @@ export class UsersService {
   }
 
   // البحث بالـ id بدل email
-  async findOneBy(id: string) {
-    const users = await db.select().from(User).where(eq(User.id, id));
+  async findOneBy(user_id: string) {
+    const users = await db.select().from(User).where(eq(User.id, user_id));
     return users[0]; // object مباشر
   }
 
@@ -80,82 +82,62 @@ export class UsersService {
     return users[0]; // دلوقتي object مباشر
   }
 
-  async updateUser(id: string, dto: UpdateUserDto) {
-    console.log('updateUser called with id:', id, 'dto:', dto);
-    const userRecord = await db.select().from(User).where(eq(User.id, id));
-    const existingUser = userRecord[0];
-    if (!existingUser) throw new NotFoundException('User not found');
+  async updateUser(user_id: string, dto: UpdateUserDto) {
+    const [user] = await db.select().from(User).where(eq(User.id, user_id));
+    if (!user) throw new NotFoundException('User not found');
 
-    const updateData: Partial<typeof User.$inferInsert> = {};
+    const {
+      name,
+      email,
+      allow_invitations,
+      current_password,
+      new_password,
+      confirm_new_password,
+      color,
+    } = dto;
 
-    // ===============================
-    // NORMAL FIELDS
-    // ===============================
-    if (dto.name !== undefined) {
-      updateData.name = dto.name;
-    }
-
-    if (dto.email !== undefined) {
-      updateData.email = dto.email;
-    }
-
-    if (dto.allow_invitations !== undefined) {
-      updateData.allow_invitations = dto.allow_invitations;
-    }
-
-    console.log('updateData before password:', updateData);
+    const updateData: Partial<typeof User.$inferInsert> = {
+      ...(name !== undefined && { name }),
+      ...(email !== undefined && { email }),
+      ...(color !== undefined && { color }),
+      ...(allow_invitations !== undefined && { allow_invitations }),
+    };
 
     // ===============================
     // PASSWORD UPDATE
     // ===============================
     const wantsPasswordChange =
-      dto.current_password || dto.new_password || dto.confirm_new_password;
+      current_password || new_password || confirm_new_password;
 
     if (wantsPasswordChange) {
-      if (!dto.current_password) {
+      if (!current_password)
         throw new BadRequestException('Current password is required');
-      }
 
-      const isMatch = await bcrypt.compare(
-        dto.current_password,
-        existingUser.password,
-      );
-
-      if (!isMatch) {
+      const isMatch = await bcrypt.compare(current_password, user.password);
+      if (!isMatch)
         throw new BadRequestException('Current password is incorrect');
-      }
 
-      if (!dto.new_password || !dto.confirm_new_password) {
+      if (!new_password || !confirm_new_password)
         throw new BadRequestException(
           'New password and confirmation are required',
         );
-      }
 
-      if (dto.new_password !== dto.confirm_new_password) {
+      if (new_password !== confirm_new_password)
         throw new BadRequestException('Passwords do not match');
-      }
 
-      const salt = await bcrypt.genSalt(10);
-      updateData.password = await bcrypt.hash(dto.new_password, salt);
+      updateData.password = await bcrypt.hash(new_password, 10);
     }
 
-    console.log('updateData after password:', updateData);
+    // 🚨 Nothing to update
+    if (!Object.keys(updateData).length) return user;
 
-    // 🚨 IMPORTANT: nothing to update
-    if (Object.keys(updateData).length === 0) {
-      console.log('Nothing to update');
-      return existingUser;
-    }
-
-    console.log('Updating user with:', updateData);
-    const [updatedUser] = await db
+    await db
       .update(User)
       .set(updateData)
-      .where(eq(User.id, id))
+      .where(eq(User.id, user_id))
       .returning();
 
-    console.log('Updated user:', updatedUser);
-    return updatedUser;
+    return 'update Successfully';
   }
 
   async overview(userId: string) {

@@ -43,6 +43,20 @@ export const ColorEnum = pgEnum('color_enums', [
   'GREEN',
   'ROYALBLUE',
 ]);
+export type UserColorType = (typeof ColorEnum.enumValues)[number];
+// Create the enum in Drizzle
+export const ProjectIconEnum = pgEnum('project_icon_enum', [
+  'folder',
+  'briefcase',
+  'rocket',
+  'target',
+  'database',
+  'users',
+  'globe',
+  'settings',
+]);
+export type ProjectIconType = (typeof ProjectIconEnum.enumValues)[number];
+
 // ===== USERS =====
 export const User = pgTable('User', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -62,6 +76,7 @@ export const Project = pgTable('Project', {
     .notNull()
     .references(() => User.id),
   createdAt: timestamp('created_at').defaultNow(),
+  icon: ProjectIconEnum('icon').notNull().default('folder'), // default icon
 });
 
 // ===== CONTRIBUTORS =====

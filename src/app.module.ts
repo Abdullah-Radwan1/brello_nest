@@ -8,6 +8,7 @@ import { TaskModule } from './tasks/task.module';
 import { ContributorsModule } from './contributors/contributors.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { InvitationModule } from './invitation/invitation.module.js';
+import { AuthorizationModule } from './assertion/assertion.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { InvitationModule } from './invitation/invitation.module.js';
     ContributorsModule,
     NotificationsModule,
     InvitationModule,
+    AuthorizationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
