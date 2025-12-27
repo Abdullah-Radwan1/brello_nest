@@ -28,6 +28,20 @@ export class InvitationService {
           eq(Invitation.project_id, CreateInvitationDto.project_id), // Add this if invitations should be unique per project
         ),
       );
+    const invitedUser = await db
+      .select({ allow_invitation: User.allow_invitations })
+      .from(User)
+      .where(eq(User.id, CreateInvitationDto.invited_user_id))
+      .limit(1); // optional
+
+    if (!invitedUser[0]) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // تحقق من allow_invitations
+    if (!invitedUser[0].allow_invitation) {
+      throw new UnauthorizedException('User does not allow invitations');
+    }
     if (existed_invitation[0]) {
       throw new UnauthorizedException('Invitation already have been sent');
     }

@@ -78,6 +78,7 @@ export class AuthService {
         name: User.name,
         email: User.email,
         allow_invitations: User.allow_invitations,
+        color: User.color,
       })
       .from(User)
       .where(eq(User.id, user.id))

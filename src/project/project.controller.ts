@@ -34,21 +34,25 @@ export class ProjectController {
     return this.projectService.findAllMyProjects(req.user.id);
   }
 
-  @Patch(':id')
+  @Patch(':project_id')
   update(
     @CurrentUser() user,
-    @Param('id') proejct_id: string,
+    @Param('project_id') project_id: string,
     @Body() updateProjectDto: UpdateProjectDto,
   ) {
-    return this.projectService.update(user.id, proejct_id, updateProjectDto);
+    return this.projectService.update(user.id, project_id, updateProjectDto);
   }
 
-  @Delete(':id')
-  remove(@CurrentUser() user, @Param('id') id: string) {
-    return this.projectService.remove(user.id, id);
+  @Delete(':project_id')
+  removeProject(@CurrentUser() user, @Param('project_id') project_id: string) {
+    return this.projectService.removeProject(user.id, project_id);
   }
-  @Get(':id')
-  findOne(@Param('id') id: string, @CurrentUser() user) {
-    return this.projectService.findOne(id, user.id);
+  @Delete(':project_id/contributors')
+  removeSelf(@CurrentUser() user, @Param('project_id') project_id: string) {
+    return this.projectService.removeSelf(user.id, project_id);
+  }
+  @Get(':project_id')
+  findOne(@CurrentUser() user, @Param('project_id') project_id: string) {
+    return this.projectService.findOne(user.id, project_id);
   }
 }

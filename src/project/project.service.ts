@@ -121,7 +121,7 @@ export class ProjectService {
         .groupBy(Project.id, User.name, Contributor.role)
     );
   }
-  async findOne(Project_id: string, user_id: string) {
+  async findOne(user_id: string, Project_id: string) {
     return db
       .select({
         id: Project.id,
@@ -155,16 +155,28 @@ export class ProjectService {
       .then((rows) => rows[0] ?? null);
   }
 
-  async update(user_id: string, proejct_id: string, updateProjectDto: any) {
-    await this.projectAuth.assertManager(proejct_id, user_id);
+  async update(user_id: string, project_id: string, updateProjectDto: any) {
+    await this.projectAuth.assertManager(project_id, user_id);
     return db
       .update(Project)
       .set(updateProjectDto)
-      .where(eq(Project.id, proejct_id));
+      .where(eq(Project.id, project_id));
   }
 
-  async remove(user_id: string, proejct_id: string) {
-    await this.projectAuth.assertManager(user_id, proejct_id);
-    return db.delete(Project).where(eq(Project.id, proejct_id));
+  async removeProject(user_id: string, project_id: string) {
+    console.log('test', user_id, project_id);
+    await this.projectAuth.assertManager(user_id, project_id);
+    return db.delete(Project).where(eq(Project.id, project_id));
+  }
+
+  async removeSelf(user_id: string, project_id: string) {
+    return db
+      .delete(Contributor)
+      .where(
+        and(
+          eq(Contributor.user_id, user_id),
+          eq(Contributor.project_id, project_id),
+        ),
+      );
   }
 }
