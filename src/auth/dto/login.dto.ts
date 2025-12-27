@@ -1,5 +1,6 @@
 // src/auth/dto/login.dto.ts
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import type { UserColorType } from 'src/db/schema';
 
 export class LoginDto {
   @IsEmail({}, { message: 'Please provide a valid email address' })
@@ -20,4 +21,7 @@ export class SignupDto {
   @IsNotEmpty({ message: 'Password is required' })
   @MinLength(6, { message: 'Password must be at least 6 characters long' })
   password: string;
+
+  @IsNotEmpty()
+  color: UserColorType;
 }

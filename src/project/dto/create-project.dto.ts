@@ -4,9 +4,8 @@ import {
   IsNotEmpty,
   IsArray,
   IsOptional,
-  IsEnum,
 } from 'class-validator';
-import { ProjectIconEnum } from 'src/db/schema';
+
 import { InvitationInput } from 'src/db/types';
 import type { ProjectIconType } from 'src/db/schema';
 export class CreateProjectDto {

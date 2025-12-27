@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateUserDto } from './create-user.dto';
+
 import {
   IsOptional,
   IsString,
@@ -7,9 +7,10 @@ import {
   IsBoolean,
   IsEmail,
 } from 'class-validator';
+import { SignupDto } from 'src/auth/dto/login.dto';
 import type { UserColorType } from 'src/db/schema';
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {
+export class UpdateUserDto extends PartialType(SignupDto) {
   @IsOptional()
   @IsString()
   name?: string;

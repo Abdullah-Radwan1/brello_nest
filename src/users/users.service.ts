@@ -9,6 +9,7 @@ import { Contributor, Invitation, Project, Task, User } from 'src/db/schema'; //
 import bcrypt from 'bcrypt';
 import { and, asc, count, eq, ilike, like, ne, sql } from 'drizzle-orm';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SignupDto } from 'src/auth/dto/login.dto';
 
 @Injectable()
 export class UsersService {
@@ -67,12 +68,12 @@ export class UsersService {
     return users[0]; // object مباشر
   }
 
-  async create(data: { name: string; email: string; password: string }) {
-    const hashedPassword = await bcrypt.hash(data.password, 10); // salt rounds = 10
+  async create({ color, email, name, password }: SignupDto) {
+    const hashedPassword = await bcrypt.hash(password, 10); // salt rounds = 10
 
     const user = await db
       .insert(User)
-      .values({ name: data.name, email: data.email, password: hashedPassword })
+      .values({ name, email, password: hashedPassword, color })
       .returning();
     return user;
   }

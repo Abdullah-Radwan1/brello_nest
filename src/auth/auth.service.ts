@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { db } from 'src/db/drizzle';
 import { User } from 'src/db/schema';
 import { eq } from 'drizzle-orm';
+import { SignupDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -43,15 +44,7 @@ export class AuthService {
     };
   }
 
-  async signup({
-    name,
-    email,
-    password,
-  }: {
-    name: string;
-    email: string;
-    password: string;
-  }) {
+  async signup({ color, email, name, password }: SignupDto) {
     const existingUser = await this.usersService.findOneByEmail(email);
     if (existingUser) {
       throw new UnauthorizedException('Email already in use');
@@ -59,12 +52,14 @@ export class AuthService {
     const createdUser = await this.usersService.create({
       email,
       name,
+      color,
       password,
     });
     const user = {
       id: createdUser[0].id,
       name: createdUser[0].name,
       email: createdUser[0].email,
+      color: createdUser[0].color,
     }; // plain object
     return {
       access_token: this.jwtService.sign({
