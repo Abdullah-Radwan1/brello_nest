@@ -1,4 +1,9 @@
-import { Injectable, Res, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -17,7 +22,7 @@ export class AuthService {
   // تستخدم مع LocalStrategy
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findOneByEmail(email);
-    if (!user) throw new UnauthorizedException('User not found');
+    if (!user) throw new UnauthorizedException('User not founddd');
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { UsersModule } from './users/users.module.js';
@@ -9,6 +10,7 @@ import { ContributorsModule } from './contributors/contributors.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { InvitationModule } from './invitation/invitation.module.js';
 import { AuthorizationModule } from './assertion/assertion.module.js';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -20,6 +22,7 @@ import { AuthorizationModule } from './assertion/assertion.module.js';
     NotificationsModule,
     InvitationModule,
     AuthorizationModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

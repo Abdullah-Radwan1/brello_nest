@@ -6,6 +6,7 @@ import {
   Req,
   Res,
   Get,
+  Query,
 } from '@nestjs/common';
 import { LocalAuthGuard } from './local.auth.guard';
 import { AuthService } from './auth.service';
@@ -13,7 +14,6 @@ import { Public } from './public.decorator';
 import type { Request, Response } from 'express';
 import { SignupDto } from './dto/login.dto';
 import { CurrentUser } from 'src/db/current-user.decorator';
-import { User } from 'src/db/schema';
 
 @Controller('auth')
 export class AuthController {
@@ -49,11 +49,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  async signup(
-    @Req() req: Request,
-    @Body() dto: SignupDto,
-    @Res() res: Response,
-  ) {
+  async signup(@Body() dto: SignupDto, @Res() res: Response) {
     const { user, access_token } = await this.authService.signup(dto);
 
     res.cookie('access_token', access_token, {
