@@ -13,10 +13,10 @@ import { assertionService } from 'src/assertion/assertion.service';
 
 @Injectable()
 export class TaskService {
-  constructor(private readonly projectAuth: assertionService) {}
+  constructor(private readonly assertion: assertionService) {}
 
   async create(user_id: string, createTaskDto: CreateTaskDto) {
-    await this.projectAuth.assertManager(user_id, createTaskDto.project_id);
+    await this.assertion.assertManager(user_id, createTaskDto.project_id);
     const [task] = await db.insert(Task).values(createTaskDto).returning();
     if (task.assignee_id) {
       await db.insert(Notification).values({

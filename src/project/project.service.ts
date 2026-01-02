@@ -19,7 +19,7 @@ import { assertionService } from 'src/assertion/assertion.service';
 
 @Injectable()
 export class ProjectService {
-  constructor(private readonly projectAuth: assertionService) {}
+  constructor(private readonly assertion: assertionService) {}
   async createProject(
     data: CreateProjectInput,
     currentuser_id: string,
@@ -88,37 +88,44 @@ export class ProjectService {
           createdAt: Project.createdAt,
           managerName: User.name,
           icon: Project.icon,
+          // Determine the role of the current user for this project
+          // If the current user is the manager → 'manager', otherwise 'contributor'
+          // This is a literal expression, so it does not require GROUP BY
           role: sql<'manager' | 'contributor'>`
-        CASE
-          WHEN ${Project.manager_id} = ${user_id} THEN 'manager'
-          ELSE ${Contributor.role}
-        END
-      `.as('role'),
+          CASE
+            WHEN ${Project.manager_id} = ${user_id} THEN 'manager'
+            ELSE 'contributor'
+          END
+        `.as('role'),
 
-          contributorsCount: sql<number>`
-        COUNT(DISTINCT ${Contributor.id})
-      `.as('contributorsCount'),
+          // Count the number of distinct contributors for this project
+          contributorsCount: sql<number>`COUNT(DISTINCT ${Contributor.id})`.as(
+            'contributorsCount',
+          ),
 
-          tasksCount: sql<number>`
-        COUNT(DISTINCT ${Task.id})
-      `.as('tasksCount'),
+          // Count the number of distinct tasks for this project
+          tasksCount: sql<number>`COUNT(DISTINCT ${Task.id})`.as('tasksCount'),
         })
-        .from(Project)
+        .from(Project) // The main table we are selecting from
 
-        // manager info
+        // Join the User table to get manager information
         .leftJoin(User, eq(Project.manager_id, User.id))
 
-        // contributors (including current user)
+        // Join the Contributor table to count contributors and filter by user
         .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
 
+        // Join the Task table to count tasks per project
         .leftJoin(Task, eq(Task.project_id, Project.id))
 
-        // 👇 مهم جدًا
+        // Filter projects where the current user is either the manager or a contributor
         .where(
           or(eq(Project.manager_id, user_id), eq(Contributor.user_id, user_id)),
         )
 
-        .groupBy(Project.id, User.name, Contributor.role)
+        //Every column in your SELECT that is not inside an aggregate must appear in GROUP BY.
+        // Group results by Project ID and manager name
+        // Needed because we use COUNT() aggregation
+        .groupBy(Project.id, User.name)
     );
   }
   async findOne(user_id: string, Project_id: string) {
@@ -162,7 +169,7 @@ export class ProjectService {
   }
 
   async update(user_id: string, project_id: string, updateProjectDto: any) {
-    await this.projectAuth.assertManager(user_id, project_id);
+    await this.assertion.assertManager(user_id, project_id);
     return db
       .update(Project)
       .set(updateProjectDto)
@@ -170,7 +177,7 @@ export class ProjectService {
   }
 
   async removeProject(user_id: string, project_id: string) {
-    await this.projectAuth.assertManager(user_id, project_id);
+    await this.assertion.assertManager(user_id, project_id);
     return db.delete(Project).where(eq(Project.id, project_id));
   }
 

@@ -7,11 +7,12 @@ import {
   Request,
   Query,
   Post,
+  Delete,
 } from '@nestjs/common';
 import { InvitationService } from './invitation.service';
 import { IsEnum } from 'class-validator';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
-import { CreateContributorDto } from 'src/contributors/dto/create-contributor.dto';
+import { CurrentUser } from 'src/db/current-user.decorator';
 
 // ✅ Runtime-safe string enum for invitation status
 export const InvitationStatusTS = ['ACCEPTED', 'DECLINED'] as const;
@@ -56,13 +57,29 @@ export class InvitationController {
   }
   // Accept or decline an invitation
   // ---------------------------
-  @Patch(':id')
+  @Patch(':invitation_id')
   respondToInvitation(
-    @Param('id') id: string, // invitation ID from URL
+    @Param('invitation_id') invitation_id: string, // invitation ID from URL
     @Body() dto: RespondInvitationDto, // validated body { status: 'ACCEPTED' | 'DECLINED' }
   ) {
     // ✅ Pass ONLY the string value to service
     // Never pass the Drizzle enum object
-    return this.invitationService.respondToInvitation(id, dto.status);
+    return this.invitationService.respondToInvitation(
+      invitation_id,
+      dto.status,
+    );
   }
+
+  @Delete(':invitation_id')
+  deleteInvitation(
+    @CurrentUser() user,
+    @Body('project_id') project_id: string, // ✅ extract string directly
+    @Param('invitation_id') invitation_id: string,
+  ) {
+    return this.invitationService.deleteInvitation(
+      user.id,
+      project_id,
+      invitation_id,
+    );
+  } // invitation ID from URL
 }

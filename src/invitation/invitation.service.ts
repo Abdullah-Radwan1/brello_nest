@@ -11,9 +11,11 @@ import { and, desc, eq, inArray } from 'drizzle-orm';
 import { NotificationTypeTS, RoleEnumTS } from 'src/db/types';
 
 import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { assertionService } from 'src/assertion/assertion.service';
 
 @Injectable()
 export class InvitationService {
+  constructor(private readonly assertion: assertionService) {}
   async createInvitation(
     CreateInvitationDto: CreateInvitationDto,
     inviter_id: string,
@@ -80,10 +82,12 @@ export class InvitationService {
   async getProjectInvitationsfunc(project_id: string) {
     return db
       .select({
+        id: Invitation.id,
         email: User.email,
         name: User.name,
         status: Invitation.status,
         CreatedAt: Invitation.createdAt,
+        project_id: Invitation.project_id,
       })
       .from(Invitation)
       .leftJoin(User, eq(User.id, Invitation.invited_user_id))
@@ -151,5 +155,14 @@ export class InvitationService {
       // 6️⃣ Return original invitation info with updated status (frontend-friendly)
       return { ...invitation, status };
     });
+  }
+
+  async deleteInvitation(
+    user_id: string,
+    project_id: string,
+    invitation_id: string,
+  ) {
+    await this.assertion.assertManager(user_id, project_id);
+    await db.delete(Invitation).where(eq(Invitation.id, invitation_id));
   }
 }

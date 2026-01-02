@@ -30,8 +30,8 @@ export class ProjectController {
   }
 
   @Get()
-  findProjects(@Req() req) {
-    return this.projectService.findAllMyProjects(req.user.id);
+  findProjects(@CurrentUser() user) {
+    return this.projectService.findAllMyProjects(user.id);
   }
 
   @Patch(':project_id')
