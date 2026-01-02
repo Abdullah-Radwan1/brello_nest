@@ -9,10 +9,14 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { db } from 'src/db/drizzle';
 import { Contributor, Notification, Task, User } from 'src/db/schema';
 import { and, eq } from 'drizzle-orm';
+import { assertionService } from 'src/assertion/assertion.service';
 
 @Injectable()
 export class TaskService {
-  async create(createTaskDto: CreateTaskDto) {
+  constructor(private readonly projectAuth: assertionService) {}
+
+  async create(user_id: string, createTaskDto: CreateTaskDto) {
+    await this.projectAuth.assertManager(user_id, createTaskDto.project_id);
     const [task] = await db.insert(Task).values(createTaskDto).returning();
     if (task.assignee_id) {
       await db.insert(Notification).values({
@@ -69,7 +73,7 @@ export class TaskService {
     return updated;
   }
 
-  async remove(taskId: string, userId: string) {
+  async remove(taskId: string, user_id: string) {
     const [task] = await db
       .select({
         id: Task.id,
@@ -88,7 +92,7 @@ export class TaskService {
       .where(
         and(
           eq(Contributor.project_id, task.project_id),
-          eq(Contributor.user_id, userId),
+          eq(Contributor.user_id, user_id),
           eq(Contributor.role, 'manager'),
         ),
       );

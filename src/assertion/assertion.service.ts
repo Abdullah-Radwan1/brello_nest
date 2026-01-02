@@ -6,7 +6,7 @@ import { and, eq } from 'drizzle-orm';
 
 @Injectable()
 export class assertionService {
-  async assertManager(project_id: string, user_id: string) {
+  async assertManager(user_id: string, project_id: string) {
     const project = await db
       .select({ id: Project.id })
       .from(Project)

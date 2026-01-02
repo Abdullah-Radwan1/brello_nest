@@ -38,7 +38,7 @@ export class ContributorsService {
     return `This action updates a #${id} contributor`;
   }
 
-  async removeMany(dto: RemoveContributorsDto, user_id: string) {
+  async removeMany(user_id: string, dto: RemoveContributorsDto) {
     const { contributor_ids, project_id } = dto;
     // 1. get only manager_id instead of full project
     const [project] = await db

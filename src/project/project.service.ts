@@ -129,7 +129,13 @@ export class ProjectService {
         description: Project.description,
         createdAt: Project.createdAt,
         managerName: User.name,
-
+        // 🎭 role of current user
+        role: sql<'manager' | 'contributor'>`
+        CASE
+          WHEN ${Project.manager_id} = ${user_id} THEN 'manager'
+          ELSE ${Contributor.role}
+        END
+      `.as('role'),
         // 🔢 count contributors per project
         contributorsCount: sql<number>`
         COUNT(DISTINCT ${Contributor.id})
@@ -150,13 +156,13 @@ export class ProjectService {
           or(eq(Project.manager_id, user_id), eq(Contributor.user_id, user_id)),
         ),
       )
-      .groupBy(Project.id, User.id)
+      .groupBy(Project.id, User.id, Contributor.role)
       .limit(1)
       .then((rows) => rows[0] ?? null);
   }
 
   async update(user_id: string, project_id: string, updateProjectDto: any) {
-    await this.projectAuth.assertManager(project_id, user_id);
+    await this.projectAuth.assertManager(user_id, project_id);
     return db
       .update(Project)
       .set(updateProjectDto)
@@ -164,7 +170,6 @@ export class ProjectService {
   }
 
   async removeProject(user_id: string, project_id: string) {
-    console.log('test', user_id, project_id);
     await this.projectAuth.assertManager(user_id, project_id);
     return db.delete(Project).where(eq(Project.id, project_id));
   }

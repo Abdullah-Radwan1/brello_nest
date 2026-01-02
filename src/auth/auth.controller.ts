@@ -6,7 +6,6 @@ import {
   Req,
   Res,
   Get,
-  Query,
 } from '@nestjs/common';
 import { LocalAuthGuard } from './local.auth.guard';
 import { AuthService } from './auth.service';

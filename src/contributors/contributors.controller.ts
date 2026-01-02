@@ -46,6 +46,6 @@ export class ContributorsController {
     @CurrentUser() user: { id: string },
     @Body() dto: RemoveContributorsDto,
   ) {
-    return this.contributorsService.removeMany(dto, user.id);
+    return this.contributorsService.removeMany(user.id, dto);
   }
 }

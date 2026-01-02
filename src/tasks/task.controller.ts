@@ -18,8 +18,8 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Post()
-  create(@Body() createTaskDto: CreateTaskDto) {
-    return this.taskService.create(createTaskDto);
+  create(@CurrentUser() user, @Body() createTaskDto: CreateTaskDto) {
+    return this.taskService.create(user.id, createTaskDto);
   }
 
   @Get()
