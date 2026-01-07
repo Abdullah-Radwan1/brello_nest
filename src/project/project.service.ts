@@ -8,7 +8,7 @@ import {
   Task,
   User,
 } from 'src/db/schema';
-import { and, eq, or, sql } from 'drizzle-orm';
+import { and, desc, eq, or, sql } from 'drizzle-orm';
 import {
   CreateProjectInput,
   InvitationStatusTS,
@@ -166,6 +166,65 @@ export class ProjectService {
       .groupBy(Project.id, User.id, Contributor.role)
       .limit(1)
       .then((rows) => rows[0] ?? null);
+  }
+  async lastproject(user_id: string) {
+    const result = await db
+      .select({
+        id: Project.id,
+        name: Project.name,
+        description: Project.description,
+        updatedAt: Project.updatedAt,
+        icon: Project.icon,
+
+        managerName: User.name,
+
+        contributorsCount: sql<number>`
+        COUNT(DISTINCT ${Contributor.id})
+      `.as('contributorsCount'),
+        completedTasks: sql<number>`
+      COALESCE(
+        COUNT(${Task.id}) FILTER (WHERE ${Task.status} = 'DONE'),
+        0
+      )
+    `,
+        tasksCount: sql<number>`
+        COUNT(DISTINCT ${Task.id})
+      `.as('tasksCount'),
+      })
+      .from(Project)
+
+      // 🔹 Manager relation
+      .leftJoin(User, eq(User.id, Project.manager_id))
+
+      // 🔹 Contributor relation
+      .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
+
+      // 🔹 Tasks
+      .leftJoin(Task, eq(Task.project_id, Project.id))
+
+      // ✅ IMPORTANT: user is manager OR contributor
+      .where(
+        or(eq(Project.manager_id, user_id), eq(Contributor.user_id, user_id)),
+      )
+
+      // ✅ GROUP BY all non-aggregated fields
+      .groupBy(
+        Project.id,
+        Project.name,
+        Project.description,
+        Project.createdAt,
+
+        Project.icon,
+        User.name,
+      )
+
+      // ✅ Last recent project
+      .orderBy(desc(Project.updatedAt))
+
+      // ✅ Only one project
+      .limit(1);
+
+    return result[0];
   }
 
   async update(user_id: string, project_id: string, updateProjectDto: any) {

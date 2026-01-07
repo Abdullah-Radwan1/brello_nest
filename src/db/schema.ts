@@ -77,6 +77,9 @@ export const Project = pgTable('Project', {
     .references(() => User.id),
   createdAt: timestamp('created_at').defaultNow(),
   icon: ProjectIconEnum('icon').notNull().default('folder'), // default icon
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 // ===== CONTRIBUTORS =====

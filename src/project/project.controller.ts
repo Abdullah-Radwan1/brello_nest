@@ -33,7 +33,10 @@ export class ProjectController {
   findProjects(@CurrentUser() user) {
     return this.projectService.findAllMyProjects(user.id);
   }
-
+  @Get('/lastProject')
+  lastProject(@CurrentUser() user) {
+    return this.projectService.lastproject(user.id);
+  }
   @Patch(':project_id')
   update(
     @CurrentUser() user,
