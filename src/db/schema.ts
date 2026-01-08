@@ -120,6 +120,20 @@ export const Task = pgTable('Task', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const TaskReview = pgTable('TaskReview', {
+  task_id: uuid('task_id')
+    .primaryKey() // ⬅️ enforces ONE review per task
+    .references(() => Task.id, { onDelete: 'cascade' }),
+
+  reviewer_id: uuid('reviewer_id')
+    .notNull()
+    .references(() => User.id, { onDelete: 'cascade' }),
+
+  comment: text('comment').notNull(),
+
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 // ===== INVITATIONS =====
 export const Invitation = pgTable('Invitation', {
   id: uuid('id').primaryKey().defaultRandom(),

@@ -1,11 +1,18 @@
 // src/task/task.service.ts
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { db } from 'src/db/drizzle';
-import { Contributor, Notification, Task, User } from 'src/db/schema';
+import {
+  Contributor,
+  Notification,
+  Task,
+  TaskReview,
+  User,
+} from 'src/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { assertionService } from 'src/assertion/assertion.service';
@@ -114,8 +121,8 @@ export class TaskService {
 
   // Manager + Contributor
   async updateStatus(
-    task_id: string,
     user_id: string,
+    task_id: string,
     status: (typeof Task_enums.enumValues)[number],
   ) {
     const task = await this.assertion.assertTaskExists(task_id);
@@ -160,6 +167,39 @@ export class TaskService {
       .returning();
 
     return updated;
+  }
+  async submitForReview(user_id: string, task_id: string, comment: string) {
+    const result = await db
+      .select({ assignee_id: Task.assignee_id, status: Task.status })
+      .from(Task)
+      .where(eq(Task.id, task_id));
+    const task = result[0];
+    console.log(task);
+
+    if (task.assignee_id !== user_id) {
+      throw new ForbiddenException('it is not your task to submit');
+    }
+
+    if (task.status !== 'IN_PROGRESS') {
+      throw new BadRequestException('Task must be in progress');
+    }
+
+    if (!comment.trim()) {
+      throw new BadRequestException('Comment is required');
+    }
+
+    await db.transaction(async (tx) => {
+      await tx
+        .update(Task)
+        .set({ status: 'REVIEW' })
+        .where(eq(Task.id, task_id));
+
+      await tx.insert(TaskReview).values({
+        task_id: task_id,
+        reviewer_id: user_id,
+        comment,
+      });
+    });
   }
 
   // ================= DELETE =================

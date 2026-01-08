@@ -18,6 +18,7 @@ import {
   UpdateTaskDto,
   UpdateTaskStatusDto,
 } from './dto/update-task.dto';
+import { SubmitTaskReviewDto } from './dto/submit-review.dto';
 
 @Controller('tasks')
 export class TaskController {
@@ -61,7 +62,14 @@ export class TaskController {
   ) {
     return this.taskService.assignTask(user.id, task_id, dto.assignee_id);
   }
-
+  @Patch(':task_id/submit-for-review')
+  submitForReview(
+    @CurrentUser() user: { id: string },
+    @Param('task_id') task_id: string,
+    @Body() dto: SubmitTaskReviewDto,
+  ) {
+    return this.taskService.submitForReview(user.id, task_id, dto.comment);
+  }
   // Manager + Contributor: update status
   @Patch(':task_id/status')
   updateStatus(
