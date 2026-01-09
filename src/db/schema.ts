@@ -15,7 +15,10 @@ export const Task_enums = pgEnum('task_enums', [
   'REVIEW',
   'DONE',
 ]);
-
+export const TaskReviewStatusEnum = pgEnum('task_review_status', [
+  'APPROVED',
+  'REJECTED',
+]);
 export const Invitation_enums = pgEnum('Invitation_enums', [
   'PENDING',
   'ACCEPTED',
@@ -120,6 +123,20 @@ export const Task = pgTable('Task', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const TaskSubmission = pgTable('TaskSubmission', {
+  task_id: uuid('task_id')
+    .primaryKey()
+    .references(() => Task.id, { onDelete: 'cascade' }),
+
+  submitted_by: uuid('submitted_by')
+    .notNull()
+    .references(() => User.id),
+
+  note: text('note').notNull(),
+
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 export const TaskReview = pgTable('TaskReview', {
   task_id: uuid('task_id')
     .primaryKey() // ⬅️ enforces ONE review per task
@@ -130,7 +147,7 @@ export const TaskReview = pgTable('TaskReview', {
     .references(() => User.id, { onDelete: 'cascade' }),
 
   comment: text('comment').notNull(),
-
+  status: TaskReviewStatusEnum('status').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
 

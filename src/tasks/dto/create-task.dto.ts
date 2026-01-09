@@ -5,8 +5,8 @@ import {
   IsUUID,
   IsNotEmpty,
 } from 'class-validator';
-import { TaskPriorityTs, TaskStatusTS } from 'src/db/types';
-import type { TaskPriority, TaskStatus } from 'src/db/types';
+import { TaskPriorityTs, TaskStatusTS } from './submit-review.dto';
+import type { TaskPriority } from './submit-review.dto';
 export class CreateTaskDto {
   @IsString()
   @IsNotEmpty()

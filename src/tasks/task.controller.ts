@@ -1,4 +1,3 @@
-// src/task/task.controller.ts
 import {
   Controller,
   Get,
@@ -11,14 +10,13 @@ import {
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
-
 import { CurrentUser } from 'src/db/current-user.decorator';
 import {
   AssignTaskDto,
   UpdateTaskDto,
   UpdateTaskStatusDto,
 } from './dto/update-task.dto';
-import { SubmitTaskReviewDto } from './dto/submit-review.dto';
+import { ReviewTaskDTO, SubmitTaskForReviewDTO } from './dto/submit-review.dto';
 
 @Controller('tasks')
 export class TaskController {
@@ -42,8 +40,6 @@ export class TaskController {
   }
 
   // ================= UPDATE =================
-
-  // Manager: update title / description / priority
   @Patch(':task_id/details')
   updateDetails(
     @CurrentUser() user: { id: string },
@@ -53,7 +49,6 @@ export class TaskController {
     return this.taskService.updateDetails(user.id, task_id, dto);
   }
 
-  // Manager: assign task
   @Patch(':task_id/assign')
   assignTask(
     @CurrentUser() user: { id: string },
@@ -62,15 +57,28 @@ export class TaskController {
   ) {
     return this.taskService.assignTask(user.id, task_id, dto.assignee_id);
   }
+
+  // Contributor: submit task for review
   @Patch(':task_id/submit-for-review')
   submitForReview(
     @CurrentUser() user: { id: string },
     @Param('task_id') task_id: string,
-    @Body() dto: SubmitTaskReviewDto,
+    @Body() dto: SubmitTaskForReviewDTO,
   ) {
-    return this.taskService.submitForReview(user.id, task_id, dto.comment);
+    return this.taskService.submitTaskForReview(user.id, task_id, dto.note);
   }
-  // Manager + Contributor: update status
+
+  // Manager: approve or reject task
+  @Patch(':task_id/review-task')
+  reviewTask(
+    @CurrentUser() user: { id: string },
+    @Param('task_id') task_id: string,
+    @Body() dto: ReviewTaskDTO,
+  ) {
+    return this.taskService.reviewTask(user.id, task_id, dto);
+  }
+
+  // Contributor or Manager: simple status updates (no review)
   @Patch(':task_id/status')
   updateStatus(
     @CurrentUser() user: { id: string },
