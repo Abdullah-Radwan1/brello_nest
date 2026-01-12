@@ -13,6 +13,7 @@ import { UsersService } from './users.service.js';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CurrentUser } from 'src/db/current-user.decorator';
 import { SignupDto } from 'src/auth/dto/login.dto';
+import { Public } from 'src/auth/public.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -38,6 +39,12 @@ export class UsersController {
     const current_user_id = req.user.id;
     return this.usersService.overview(current_user_id);
   }
+  @Public()
+  @Get('/check-name')
+  checkname(@Query('name') name: string) {
+    return this.usersService.isNameTaken(name);
+  }
+
   @Patch('/updateUser')
   update(@CurrentUser() user, @Body() dto: UpdateUserDto) {
     return this.usersService.updateUser(user.id, dto);

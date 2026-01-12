@@ -1,23 +1,65 @@
-import { Controller, Get, Post, Body, Query, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+import { CurrentUser } from 'src/db/current-user.decorator';
 
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  @Post()
-  create(@Body() createNotificationDto: CreateNotificationDto) {
-    return this.notificationsService.create(createNotificationDto);
+  // Fetch all notifications with pagination
+  @Get()
+  async findAll(
+    @CurrentUser() user: { id: string; name: string },
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ) {
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+
+    return this.notificationsService.getAll(
+      user.id,
+      user.name,
+      pageNum,
+      limitNum,
+    );
   }
 
-  @Get()
-  findAll(
-    @Request() req,
-    @Query('page') page = '1', // default to page 1
+  // Fetch unread notifications only
+  @Get('unread')
+  async getUnread(
+    @CurrentUser() user: { id: string; name: string },
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
   ) {
-    const current_user_id = req.user.id;
     const pageNum = parseInt(page);
-    return this.notificationsService.findAll(current_user_id, pageNum);
+    const limitNum = parseInt(limit);
+
+    return this.notificationsService.getUnread(
+      user.id,
+      user.name,
+      pageNum,
+      limitNum,
+    );
+  }
+
+  // Count unread notifications
+  @Get('count')
+  async countUnread(@CurrentUser() user: { id: string; name: string }) {
+    return this.notificationsService.countUnread(user.id);
+  }
+
+  // Mark a notification as read
+  @Post('read/:id')
+  async markAsRead(
+    @CurrentUser() user: { id: string; name: string },
+    @Body('notification_id') notification_id: string,
+  ) {
+    return this.notificationsService.markAsRead(user.id, notification_id);
+  }
+
+  // Mark all notifications as read
+  @Post('read-all')
+  async markAllAsRead(@CurrentUser() user: { id: string; name: string }) {
+    return this.notificationsService.markAllAsRead(user.id);
   }
 }

@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { db } from 'src/db/drizzle';
 import {
+  Activity,
+  ActivityType,
   Contributor,
   Notification,
   Task,
@@ -16,41 +18,70 @@ import {
 import { and, eq } from 'drizzle-orm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { assertionService } from 'src/assertion/assertion.service';
-import { Task_enums } from 'src/db/schema';
-import { UpdateTaskDto } from './dto/update-task.dto';
-import {
-  ReviewTaskDTO,
-  SubmitTaskForReviewDTO,
-  TaskStatus,
-} from './dto/submit-review.dto';
+import { TaskStatus } from './dto/submit-review.dto';
+import { ReviewTaskDTO } from './dto/submit-review.dto';
 
 @Injectable()
 export class TaskService {
   constructor(private readonly assertion: assertionService) {}
 
+  // ================= ACTIVITY =================
+  private async logActivity(
+    tx: any,
+    payload: {
+      user_id: string;
+      user_name: string;
+      project_id: string;
+      type: ActivityType;
+      entity_id: string;
+      metadata?: Record<string, any>;
+    },
+  ) {
+    await tx.insert(Activity).values({
+      user_id: payload.user_id,
+      project_id: payload.project_id,
+      type: payload.type,
+      entity_type: 'task',
+      entity_id: payload.entity_id,
+      metadata: {
+        actor_name: payload.user_name,
+        ...payload.metadata,
+      },
+    });
+  }
+
   // ================= CREATE =================
-  async create(user_id: string, dto: CreateTaskDto) {
+  async create(user_id: string, user_name: string, dto: CreateTaskDto) {
     await this.assertion.assertManager(user_id, dto.project_id);
 
-    const [task] = await db.insert(Task).values(dto).returning();
+    return db.transaction(async (tx) => {
+      const [task] = await tx.insert(Task).values(dto).returning();
 
-    if (task.assignee_id) {
-      await db.insert(Notification).values({
-        user_id: task.assignee_id,
-        type: 'TASK_ASSIGNED',
-        message: `You have been assigned to task "${task.title}"`,
-        link: `/projects/${task.project_id}/tasks/${task.id}`,
+      await this.logActivity(tx, {
+        user_id,
+        user_name,
+        project_id: dto.project_id,
+        type: 'TASK_CREATED',
+        entity_id: task.id,
+        metadata: { title: task.title },
       });
-    }
 
-    return task;
+      if (task.assignee_id) {
+        await tx.insert(Notification).values({
+          user_id: task.assignee_id,
+          type: 'TASK_ASSIGNED',
+          message: `${user_name} assigned you to task "${task.title}"`,
+          link: `/projects/${task.project_id}/tasks/${task.id}`,
+        });
+      }
+
+      return task;
+    });
   }
 
   // ================= READ =================
   async findAll(project_id: string) {
-    if (!project_id) {
-      throw new NotFoundException('project_id is required');
-    }
+    if (!project_id) throw new NotFoundException('project_id is required');
 
     return db
       .select({
@@ -79,24 +110,17 @@ export class TaskService {
 
   async findOne(task_id: string) {
     const task = await db.select().from(Task).where(eq(Task.id, task_id));
-    if (!task || !task[0]) throw new NotFoundException('Task not found');
+    if (!task[0]) throw new NotFoundException('Task not found');
     return task[0];
   }
 
-  // ================= UPDATE =================
-  async updateDetails(user_id: string, task_id: string, dto: UpdateTaskDto) {
-    const task = await this.assertion.assertTaskExists(task_id);
-    await this.assertion.assertManager(user_id, task.project_id);
-
-    const [updated] = await db
-      .update(Task)
-      .set(dto)
-      .where(eq(Task.id, task_id))
-      .returning();
-    return updated;
-  }
-
-  async assignTask(user_id: string, task_id: string, assigneeId: string) {
+  // ================= ASSIGN =================
+  async assignTask(
+    user_id: string,
+    user_name: string,
+    task_id: string,
+    assigneeId: string,
+  ) {
     const task = await this.assertion.assertTaskExists(task_id);
     await this.assertion.assertManager(user_id, task.project_id);
     await this.assertion.assertContributor(assigneeId, task.project_id);
@@ -110,7 +134,7 @@ export class TaskService {
     await db.insert(Notification).values({
       user_id: assigneeId,
       type: 'TASK_ASSIGNED',
-      message: `You have been assigned to task "${updated.title}"`,
+      message: `${user_name} assigned you to task "${updated.title}"`,
       link: `/projects/${task.project_id}/tasks/${task.id}`,
     });
 
@@ -118,33 +142,17 @@ export class TaskService {
   }
 
   // ================= STATUS =================
-  async updateStatus(user_id: string, task_id: string, status: TaskStatus) {
+  async updateStatus(
+    user_id: string,
+    user_name: string,
+    task_id: string,
+    status: TaskStatus,
+  ) {
     const task = await this.assertion.assertTaskExists(task_id);
     const role = await this.assertion.getUserRole(user_id, task.project_id);
 
-    // Contributor rules
-    if (role === 'contributor') {
-      if (task.assignee_id !== user_id)
-        throw new ForbiddenException('You can only update your own tasks');
-
-      const allowedTransitions = {
-        TODO: ['IN_PROGRESS'],
-      };
-
-      if (!allowedTransitions[task.status]?.includes(status)) {
-        throw new ForbiddenException(
-          'Invalid status transition for contributor',
-        );
-      }
-    }
-
-    // Manager rules
-    if (role === 'manager') {
-      if (task.status === 'REVIEW' && status !== 'DONE') {
-        throw new ForbiddenException(
-          'Managers can only approve tasks from REVIEW to DONE or reject with reviewTask',
-        );
-      }
+    if (role === 'contributor' && task.assignee_id !== user_id) {
+      throw new ForbiddenException('You can only update your own tasks');
     }
 
     const payload: any = { status };
@@ -156,10 +164,26 @@ export class TaskService {
       .set(payload)
       .where(eq(Task.id, task_id))
       .returning();
+
+    if (task.assignee_id && task.assignee_id !== user_id) {
+      await db.insert(Notification).values({
+        user_id: task.assignee_id,
+        type: 'TASK_STATUS_UPDATED',
+        message: `${user_name} updated task "${updated.title}" to ${status}`,
+        link: `/projects/${task.project_id}/tasks/${task.id}`,
+      });
+    }
+
     return updated;
   }
 
-  async submitTaskForReview(user_id: string, task_id: string, note: string) {
+  // ================= SUBMIT FOR REVIEW =================
+  async submitTaskForReview(
+    user_id: string,
+    user_name: string,
+    task_id: string,
+    note: string,
+  ) {
     const task = await this.assertion.assertTaskExists(task_id);
 
     if (task.assignee_id !== user_id)
@@ -168,32 +192,48 @@ export class TaskService {
       throw new BadRequestException('Task must be in progress');
 
     await db.transaction(async (tx) => {
-      // Upsert the submission
-      const [existing] = await tx
-        .select()
-        .from(TaskSubmission)
-        .where(eq(TaskSubmission.task_id, task_id));
+      await tx
+        .insert(TaskSubmission)
+        .values({ task_id, submitted_by: user_id, note })
+        .onConflictDoUpdate({
+          target: TaskSubmission.task_id,
+          set: { note },
+        });
 
-      if (existing) {
-        await tx
-          .update(TaskSubmission)
-          .set({ note })
-          .where(eq(TaskSubmission.task_id, task_id));
-      } else {
-        await tx
-          .insert(TaskSubmission)
-          .values([{ task_id, submitted_by: user_id, note }]);
-      }
-
-      // Update task status to REVIEW
       await tx
         .update(Task)
         .set({ status: 'REVIEW' })
         .where(eq(Task.id, task_id));
+
+      const managers = await tx
+        .select()
+        .from(Contributor)
+        .where(
+          and(
+            eq(Contributor.project_id, task.project_id),
+            eq(Contributor.role, 'manager'),
+          ),
+        );
+
+      for (const manager of managers) {
+        await tx.insert(Notification).values({
+          read: false,
+          user_id: manager.user_id,
+          type: 'TASK_SUBMITTED',
+          message: `${user_name} submitted task "${task.title}" for review`,
+          link: `/projects/${task.project_id}/tasks/${task.id}`,
+        });
+      }
     });
   }
 
-  async reviewTask(manager_id: string, task_id: string, dto: ReviewTaskDTO) {
+  // ================= REVIEW =================
+  async reviewTask(
+    manager_id: string,
+    manager_name: string,
+    task_id: string,
+    dto: ReviewTaskDTO,
+  ) {
     const task = await this.assertion.assertTaskExists(task_id);
     await this.assertion.assertManager(manager_id, task.project_id);
 
@@ -201,49 +241,50 @@ export class TaskService {
       throw new BadRequestException('Task is not under review');
 
     await db.transaction(async (tx) => {
-      // Upsert TaskReview instead of always inserting
-      const [existingReview] = await tx
-        .select()
-        .from(TaskReview)
-        .where(eq(TaskReview.task_id, task_id));
-
-      if (existingReview) {
-        await tx
-          .update(TaskReview)
-          .set({
-            reviewer_id: manager_id,
-            status: dto.decision,
-            comment: dto.reject_comment,
-          })
-          .where(eq(TaskReview.task_id, task_id));
-      } else {
-        await tx.insert(TaskReview).values([
-          {
-            task_id,
+      await tx
+        .insert(TaskReview)
+        .values({
+          task_id,
+          reviewer_id: manager_id,
+          status: dto.decision,
+          comment: dto.reject_comment,
+        })
+        .onConflictDoUpdate({
+          target: TaskReview.task_id,
+          set: {
             reviewer_id: manager_id,
             status: dto.decision,
             comment: dto.reject_comment,
           },
-        ]);
-      }
+        });
 
-      // Update task status based on decision
+      const newStatus = dto.decision === 'APPROVED' ? 'DONE' : 'IN_PROGRESS';
+
       await tx
         .update(Task)
-        .set({
-          status: dto.decision === 'APPROVED' ? 'DONE' : 'IN_PROGRESS',
-        })
+        .set({ status: newStatus })
         .where(eq(Task.id, task_id));
 
-      // Delete the submission after review
       await tx
         .delete(TaskSubmission)
         .where(eq(TaskSubmission.task_id, task_id));
+
+      if (task.assignee_id) {
+        await tx.insert(Notification).values({
+          user_id: task.assignee_id,
+          type: 'TASK_REVIEWED',
+          message:
+            dto.decision === 'APPROVED'
+              ? `${manager_name} approved task "${task.title}"`
+              : `${manager_name} rejected task "${task.title}": ${dto.reject_comment}`,
+          link: `/projects/${task.project_id}/tasks/${task.id}`,
+        });
+      }
     });
   }
 
   // ================= DELETE =================
-  async remove(user_id: string, task_id: string) {
+  async remove(user_id: string, user_name: string, task_id: string) {
     const task = await this.assertion.assertTaskExists(task_id);
     await this.assertion.assertManager(user_id, task.project_id);
 
@@ -251,6 +292,16 @@ export class TaskService {
       .delete(Task)
       .where(eq(Task.id, task_id))
       .returning();
+
+    if (deleted?.assignee_id) {
+      await db.insert(Notification).values({
+        user_id: deleted.assignee_id,
+        type: 'TASK_REMOVED',
+        message: `${user_name} removed task "${deleted.title}"`,
+        link: `/projects/${task.project_id}/tasks`,
+      });
+    }
+
     return deleted;
   }
 }

@@ -77,6 +77,17 @@ export class UsersService {
       .returning();
     return user;
   }
+
+  async isNameTaken(name: string) {
+    const user = await db
+      .select()
+      .from(User)
+      .where(eq(User.name, name))
+      .limit(1);
+
+    return user.length > 0;
+  }
+
   // users.service.ts
   async findOneByEmail(email: string) {
     const users = await db.select().from(User).where(eq(User.email, email));

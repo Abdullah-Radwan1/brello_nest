@@ -1,3 +1,4 @@
+import { index, jsonb } from 'drizzle-orm/pg-core';
 import {
   pgTable,
   uuid,
@@ -19,15 +20,33 @@ export const TaskReviewStatusEnum = pgEnum('task_review_status', [
   'APPROVED',
   'REJECTED',
 ]);
+export const ActivityTypeEnum = pgEnum('activity_type', [
+  'PROJECT_CREATED',
+  'PROJECT_UPDATED',
+
+  'TASK_CREATED',
+  'TASK_UPDATED',
+  'TASK_STATUS_CHANGED',
+  'TASK_ASSIGNED',
+
+  'COMMENT_ADDED',
+  'INVITATION_SENT',
+  'INVITATION_ACCEPTED',
+]);
+export type ActivityType = (typeof ActivityTypeEnum.enumValues)[number];
 export const Invitation_enums = pgEnum('Invitation_enums', [
   'PENDING',
   'ACCEPTED',
   'DECLINED',
 ]);
 
-export const Notification_enums = pgEnum('notification_enums', [
-  'INVITATION',
+export const Notification_enums = pgEnum('notification_type', [
   'TASK_ASSIGNED',
+  'TASK_STATUS_UPDATED',
+  'TASK_SUBMITTED',
+  'TASK_REVIEWED',
+  'TASK_REMOVED',
+  'INVITATION',
 ]);
 
 export const Role_enums = pgEnum('role_enum', ['contributor', 'manager']);
@@ -65,7 +84,7 @@ export const User = pgTable('User', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
-  name: varchar('name', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull().unique(),
   allow_invitations: boolean().default(true),
   color: ColorEnum('color').notNull().default('PURPLE'), // uses color_enum now
 });
@@ -150,7 +169,53 @@ export const TaskReview = pgTable('TaskReview', {
   status: TaskReviewStatusEnum('status').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
+export const Activity = pgTable(
+  'Activity',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
 
+    user_id: uuid('user_id')
+      .notNull()
+      .references(() => User.id, { onDelete: 'cascade' }),
+
+    project_id: uuid('project_id')
+      .notNull()
+      .references(() => Project.id, { onDelete: 'cascade' }),
+
+    type: ActivityTypeEnum('type').notNull(),
+
+    /**
+     * entity info (task, project, comment, etc.)
+     */
+    entity_type: text('entity_type').notNull(), // 'task' | 'project'
+    entity_id: uuid('entity_id').notNull(),
+
+    /**
+     * Descriptive payload
+     * ex:
+     * { from: "TODO", to: "DONE" }
+     */
+    metadata: jsonb('metadata'),
+
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    // 🔥 dashboard: last project
+    userProjectTimeIdx: index('activity_user_project_time_idx').on(
+      table.user_id,
+      table.project_id,
+      table.createdAt,
+    ),
+
+    // 🔥 feed
+    projectFeedIdx: index('activity_project_time_idx').on(
+      table.project_id,
+      table.createdAt,
+    ),
+  }),
+);
 // ===== INVITATIONS =====
 export const Invitation = pgTable('Invitation', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -177,4 +242,5 @@ export const Notification = pgTable('Notification', {
   message: text('message').notNull(),
   link: varchar('link', { length: 255 }).notNull(),
   createdAt: timestamp('created_at').defaultNow(),
+  read: boolean('read').notNull().default(false),
 });

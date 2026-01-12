@@ -54,6 +54,7 @@ export class assertionService {
         project_id: Task.project_id,
         status: Task.status,
         assignee_id: Task.assignee_id,
+        title: Task.title,
       })
       .from(Task)
       .where(eq(Task.id, task_id));

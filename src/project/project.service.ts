@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { db } from 'src/db/drizzle';
 import {
+  Activity,
   Contributor,
   Invitation,
   Notification,
@@ -173,55 +174,63 @@ export class ProjectService {
         id: Project.id,
         name: Project.name,
         description: Project.description,
-        updatedAt: Project.updatedAt,
         icon: Project.icon,
-
+        updatedAt: Project.updatedAt,
+        type: Activity.type,
         managerName: User.name,
 
         contributorsCount: sql<number>`
         COUNT(DISTINCT ${Contributor.id})
       `.as('contributorsCount'),
+
         completedTasks: sql<number>`
-      COALESCE(
-        COUNT(${Task.id}) FILTER (WHERE ${Task.status} = 'DONE'),
-        0
-      )
-    `,
+        COALESCE(
+          COUNT(DISTINCT ${Task.id}) FILTER (WHERE ${Task.status} = 'DONE'),
+          0
+        )
+      `.as('completedTasks'),
+
         tasksCount: sql<number>`
         COUNT(DISTINCT ${Task.id})
       `.as('tasksCount'),
-      })
-      .from(Project)
 
-      // 🔹 Manager relation
+        // 👇 useful for UI ("last activity")
+        lastActivityAt: sql<Date>`MAX(${Activity.createdAt})`.as(
+          'lastActivityAt',
+        ),
+      })
+      .from(Activity)
+
+      // 🔹 Activity → Project
+      .innerJoin(Project, eq(Project.id, Activity.project_id))
+
+      // 🔹 Manager
       .leftJoin(User, eq(User.id, Project.manager_id))
 
-      // 🔹 Contributor relation
+      // 🔹 Contributors
       .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
 
       // 🔹 Tasks
       .leftJoin(Task, eq(Task.project_id, Project.id))
 
-      // ✅ IMPORTANT: user is manager OR contributor
-      .where(
-        or(eq(Project.manager_id, user_id), eq(Contributor.user_id, user_id)),
-      )
+      // ✅ Only activities done by this user
+      .where(eq(Activity.user_id, user_id))
 
-      // ✅ GROUP BY all non-aggregated fields
+      // ✅ Grouping
       .groupBy(
         Project.id,
         Project.name,
         Project.description,
-        Project.createdAt,
-
         Project.icon,
+        Project.updatedAt,
         User.name,
+        Activity.type,
       )
 
-      // ✅ Last recent project
-      .orderBy(desc(Project.updatedAt))
+      // ✅ Most recent interaction wins
+      .orderBy(desc(sql`MAX(${Activity.createdAt})`))
 
-      // ✅ Only one project
+      // ✅ Only last project
       .limit(1);
 
     return result[0];

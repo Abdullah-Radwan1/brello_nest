@@ -60,12 +60,12 @@ export class InvitationService {
 
     const invitations = await db
       .select({
-        invitationId: Invitation.id,
+        invitation_id: Invitation.id,
         status: Invitation.status,
         CreatedAt: Invitation.createdAt,
         email: User.email,
         inviterName: User.name,
-
+        project_id: Project.id,
         projectName: Project.name,
         projectDescription: Project.description,
       })

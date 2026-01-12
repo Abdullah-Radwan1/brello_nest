@@ -1,26 +1,130 @@
 import { Injectable } from '@nestjs/common';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
-import { db } from 'src/db/drizzle';
 import { Notification, User } from 'src/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { and, eq, sql, desc, lt } from 'drizzle-orm';
+import { db } from 'src/db/drizzle';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class NotificationsService {
-  create(createNotificationDto: CreateNotificationDto) {
-    return 'This action adds a new notification';
+  // Fetch all notifications with pagination, include sender name
+  async getAll(user_id: string, user_name: string, page = 1, limit = 20) {
+    const offset = (page - 1) * limit;
+
+    const [notifications, countResult] = await Promise.all([
+      db
+        .select({
+          id: Notification.id,
+          type: Notification.type,
+          message: Notification.message,
+          link: Notification.link,
+          read: Notification.read,
+          createdAt: Notification.createdAt,
+        })
+        .from(Notification)
+        .where(eq(Notification.user_id, user_id))
+        .orderBy(desc(Notification.createdAt))
+        .limit(limit)
+        .offset(offset),
+
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(Notification)
+        .where(eq(Notification.user_id, user_id)),
+    ]);
+
+    const total = Number(countResult[0]?.count || 0);
+
+    return {
+      notifications: notifications.map((n) => ({
+        ...n,
+        user_name, // attach current user name
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
-  async findAll(user_id: string, page: number) {
-    const offset = (page - 1) * 5; // Calculate how many records to skip
-    const notifications = await db
-      .select() // Select all columns
-      .from(Notification) // From the Notification table
-      .orderBy(desc(Notification.createdAt)) // Order by createdAt descending (latest first)
-      .where(eq(User.id, user_id))
-      .limit(5) // Limit the number of rows returned
-      .offset(offset); // Skip rows according to the page number
+  // Fetch unread notifications only
+  async getUnread(user_id: string, user_name: string, page = 1, limit = 20) {
+    const offset = (page - 1) * limit;
 
-    return notifications; // Return the paginated results
+    const notifications = await db
+      .select({
+        id: Notification.id,
+        type: Notification.type,
+        message: Notification.message,
+        link: Notification.link,
+        read: Notification.read,
+        createdAt: Notification.createdAt,
+      })
+      .from(Notification)
+      .where(
+        and(eq(Notification.user_id, user_id), eq(Notification.read, false)),
+      )
+      .orderBy(desc(Notification.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return notifications.map((n) => ({
+      ...n,
+      user_name, // attach current user name
+    }));
+  }
+
+  // Count unread notifications
+  async countUnread(user_id: string) {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(Notification)
+      .where(
+        and(eq(Notification.user_id, user_id), eq(Notification.read, false)),
+      );
+
+    return result[0]?.count || 0;
+  }
+
+  // Mark a single notification as read
+  async markAsRead(user_id: string, notification_id: string) {
+    const [updated] = await db
+      .update(Notification)
+      .set({ read: true })
+      .where(
+        and(
+          eq(Notification.user_id, user_id),
+          eq(Notification.id, notification_id),
+        ),
+      )
+      .returning();
+
+    return updated;
+  }
+
+  // Mark all notifications as read
+  async markAllAsRead(user_id: string) {
+    return await db
+      .update(Notification)
+      .set({ read: true })
+      .where(eq(Notification.user_id, user_id))
+      .returning();
+  }
+
+  // Cron job to delete notifications older than 2 days
+  @Cron('*/10 * * * * *') // every 10 seconds for testing
+  async deleteOldNotifications() {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 2); // 2 days old
+
+    const deleted = await db
+      .delete(Notification)
+      .where(lt(Notification.createdAt, cutoff))
+      .returning();
+
+    console.log(
+      `[Notifications Cron] Deleted ${deleted.length} old notifications`,
+    );
   }
 }
