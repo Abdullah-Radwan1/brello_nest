@@ -17,6 +17,7 @@ import {
   RoleEnumTS,
 } from 'src/db/types';
 import { assertionService } from 'src/assertion/assertion.service';
+import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
 export class ProjectService {
@@ -53,9 +54,24 @@ export class ProjectService {
       role: RoleEnumTS.MANAGER,
     });
 
-    // 3️⃣ Add invitations & notifications
+    // 3️⃣ Insert ACTIVITY (project creation)
+    await db.insert(Activity).values({
+      user_id: currentuser_id,
+      project_id: createdProject.id,
+      type: 'PROJECT_CREATED',
+
+      entity_type: 'project',
+      entity_id: createdProject.id,
+
+      metadata: {
+        projectName: createdProject.name,
+        createdBy: currentUsername,
+      },
+    });
+
+    // 4️⃣ Add invitations & notifications
     if (data.invitations?.length) {
-      // Insert invitations
+      // Invitations
       await db.insert(Invitation).values(
         data.invitations.map((c) => ({
           project_id: createdProject.id,
@@ -65,13 +81,13 @@ export class ProjectService {
         })),
       );
 
-      // Insert notifications for each invited user
+      // Notifications
       await db.insert(Notification).values(
         data.invitations.map((c) => ({
           user_id: c.invited_user_id,
+          type: NotificationTypeTS.INVITATION,
           message: `${currentUsername} has invited you to project "${createdProject.name}"`,
-          link: `${process.env.FRONTEND_URL}/projects/${createdProject.id}`,
-          type: NotificationTypeTS.INVITATION, // <-- cast here
+          link: `/projects/${createdProject.id}`,
         })),
       );
     }
@@ -168,76 +184,66 @@ export class ProjectService {
       .limit(1)
       .then((rows) => rows[0] ?? null);
   }
-  async lastproject(user_id: string) {
-    const result = await db
+
+  async lastProject(user_id: string) {
+    const lastActivityWithProject = await db
       .select({
-        id: Project.id,
-        name: Project.name,
-        description: Project.description,
-        icon: Project.icon,
-        updatedAt: Project.updatedAt,
-        type: Activity.type,
+        projectId: Activity.project_id,
+        projectName: Project.name,
+        projectDescription: Project.description,
+        projectIcon: Project.icon,
+        projectCreatedAt: Project.createdAt,
         managerName: User.name,
+        lastActivityType: Activity.type,
+        lastActivityMetadata: Activity.metadata,
+        lastActivityAt: Activity.createdAt,
 
-        contributorsCount: sql<number>`
-        COUNT(DISTINCT ${Contributor.id})
-      `.as('contributorsCount'),
+        contributorsCount: sql<number>`(
+        SELECT COUNT(*) FROM "Contributor"
+        WHERE "Contributor"."project_id" = "Project"."id"
+      )`.as('contributorsCount'),
 
-        completedTasks: sql<number>`
-        COALESCE(
-          COUNT(DISTINCT ${Task.id}) FILTER (WHERE ${Task.status} = 'DONE'),
-          0
-        )
-      `.as('completedTasks'),
+        tasksCount: sql<number>`(
+        SELECT COUNT(*) FROM "Task"
+        WHERE "Task"."project_id" = "Project"."id"
+      )`.as('tasksCount'),
 
-        tasksCount: sql<number>`
-        COUNT(DISTINCT ${Task.id})
-      `.as('tasksCount'),
-
-        // 👇 useful for UI ("last activity")
-        lastActivityAt: sql<Date>`MAX(${Activity.createdAt})`.as(
-          'lastActivityAt',
-        ),
+        completedTasks: sql<number>`(
+        SELECT COUNT(*) FROM "Task"
+        WHERE "Task"."project_id" = "Project"."id"
+        AND "Task"."status" = 'DONE'
+      )`.as('completedTasks'),
       })
       .from(Activity)
-
-      // 🔹 Activity → Project
-      .innerJoin(Project, eq(Project.id, Activity.project_id))
-
-      // 🔹 Manager
+      .leftJoin(Project, eq(Project.id, Activity.project_id))
       .leftJoin(User, eq(User.id, Project.manager_id))
-
-      // 🔹 Contributors
-      .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
-
-      // 🔹 Tasks
-      .leftJoin(Task, eq(Task.project_id, Project.id))
-
-      // ✅ Only activities done by this user
       .where(eq(Activity.user_id, user_id))
-
-      // ✅ Grouping
-      .groupBy(
-        Project.id,
-        Project.name,
-        Project.description,
-        Project.icon,
-        Project.updatedAt,
-        User.name,
-        Activity.type,
-      )
-
-      // ✅ Most recent interaction wins
-      .orderBy(desc(sql`MAX(${Activity.createdAt})`))
-
-      // ✅ Only last project
+      .orderBy(desc(Activity.createdAt))
       .limit(1);
 
-    return result[0];
+    if (!lastActivityWithProject[0]) return null;
+
+    return lastActivityWithProject[0];
   }
 
-  async update(user_id: string, project_id: string, updateProjectDto: any) {
+  async update(
+    user_id: string,
+    project_id: string,
+    updateProjectDto: UpdateProjectDto,
+  ) {
     await this.assertion.assertManager(user_id, project_id);
+    await db.insert(Activity).values({
+      user_id,
+      project_id,
+      type: 'PROJECT_UPDATED',
+
+      entity_type: 'project',
+      entity_id: project_id,
+
+      metadata: {
+        updatedFields: Object.keys(updateProjectDto),
+      },
+    });
     return db
       .update(Project)
       .set(updateProjectDto)

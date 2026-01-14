@@ -28,12 +28,15 @@ export const ActivityTypeEnum = pgEnum('activity_type', [
   'TASK_UPDATED',
   'TASK_STATUS_CHANGED',
   'TASK_ASSIGNED',
+  'TASK_DELETED', // ✅ REQUIRED
 
   'COMMENT_ADDED',
   'INVITATION_SENT',
   'INVITATION_ACCEPTED',
 ]);
+
 export type ActivityType = (typeof ActivityTypeEnum.enumValues)[number];
+
 export const Invitation_enums = pgEnum('Invitation_enums', [
   'PENDING',
   'ACCEPTED',

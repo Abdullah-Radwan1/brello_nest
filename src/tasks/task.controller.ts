@@ -40,8 +40,8 @@ export class TaskController {
   }
 
   @Get(':task_id')
-  findOne(@Param('task_id') task_id: string) {
-    return this.taskService.findOne(task_id);
+  findOne(@CurrentUser() user, @Param('task_id') task_id: string) {
+    return this.taskService.findOne(user.id, task_id);
   }
 
   // ================= UPDATE =================
@@ -53,12 +53,7 @@ export class TaskController {
     @Param('task_id') task_id: string,
     @Body() dto: UpdateTaskDto,
   ) {
-    return this.taskService.updateStatus(
-      user.id,
-      user.name,
-      task_id,
-      dto.status!,
-    );
+    return this.taskService.updateDetails(user.id, user.name, task_id, dto);
   }
 
   // assign task

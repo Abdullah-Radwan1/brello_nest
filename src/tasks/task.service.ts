@@ -10,6 +10,7 @@ import {
   ActivityType,
   Contributor,
   Notification,
+  Project,
   Task,
   TaskReview,
   TaskSubmission,
@@ -18,8 +19,9 @@ import {
 import { and, eq } from 'drizzle-orm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { assertionService } from 'src/assertion/assertion.service';
-import { TaskStatus } from './dto/submit-review.dto';
+import { TaskStatus, TaskStatusTS } from './dto/submit-review.dto';
 import { ReviewTaskDTO } from './dto/submit-review.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
 export class TaskService {
@@ -71,7 +73,7 @@ export class TaskService {
           user_id: task.assignee_id,
           type: 'TASK_ASSIGNED',
           message: `${user_name} assigned you to task "${task.title}"`,
-          link: `/projects/${task.project_id}/tasks/${task.id}`,
+          link: `/project/${task.project_id}/task/${task.id}`,
         });
       }
 
@@ -108,13 +110,107 @@ export class TaskService {
       .where(eq(Task.project_id, project_id));
   }
 
-  async findOne(task_id: string) {
-    const task = await db.select().from(Task).where(eq(Task.id, task_id));
-    if (!task[0]) throw new NotFoundException('Task not found');
-    return task[0];
+  async findOne(user_id: string, task_id: string) {
+    const [row] = await db
+      .select({
+        // ===== Task =====
+        id: Task.id,
+        title: Task.title,
+        description: Task.description,
+        status: Task.status,
+        priority: Task.priority,
+        start_date: Task.start_date,
+        end_date: Task.end_date,
+        createdAt: Task.createdAt,
+
+        // ===== Assignee =====
+        assignee_id: Task.assignee_id,
+        assignee_name: User.name,
+
+        // ===== Project / Role =====
+        project_id: Task.project_id,
+        project_manager_id: Project.manager_id,
+        contributor_role: Contributor.role,
+
+        // ===== Submission =====
+        submission_note: TaskSubmission.note,
+        submission_created_at: TaskSubmission.createdAt,
+
+        // ===== Review =====
+        review_status: TaskReview.status,
+        review_comment: TaskReview.comment,
+        review_created_at: TaskReview.createdAt,
+        reviewer_id: TaskReview.reviewer_id,
+      })
+      .from(Task)
+      .leftJoin(User, eq(User.id, Task.assignee_id))
+      .leftJoin(Project, eq(Project.id, Task.project_id))
+      .leftJoin(
+        Contributor,
+        and(
+          eq(Contributor.project_id, Task.project_id),
+          eq(Contributor.user_id, user_id),
+        ),
+      )
+      .leftJoin(TaskSubmission, eq(TaskSubmission.task_id, Task.id))
+      .leftJoin(TaskReview, eq(TaskReview.task_id, Task.id))
+      .where(eq(Task.id, task_id));
+
+    if (!row) throw new NotFoundException('Task not found');
+
+    // ===== Permission Resolution =====
+    const isProjectManager = row.project_manager_id === user_id;
+    const isManagerContributor = row.contributor_role === 'manager';
+    const isManager = isProjectManager || isManagerContributor;
+    const isOwner = row.assignee_id === user_id;
+
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      status: row.status,
+      priority: row.priority,
+      start_date: row.start_date,
+      end_date: row.end_date,
+      createdAt: row.createdAt,
+      project_id: row.project_id,
+
+      assignee: row.assignee_id
+        ? {
+            id: row.assignee_id,
+            name: row.assignee_name,
+          }
+        : null,
+
+      // 🔥 NEW
+      submission: row.submission_note
+        ? {
+            note: row.submission_note,
+            createdAt: row.submission_created_at,
+          }
+        : null,
+
+      review: row.review_status
+        ? {
+            status: row.review_status,
+            comment: row.review_comment,
+            reviewer_id: row.reviewer_id,
+            createdAt: row.review_created_at,
+          }
+        : null,
+
+      permissions: {
+        isManager,
+        isOwner,
+        canEdit: isManager,
+        canDelete: isProjectManager,
+        canChangeStatus: isManager || isOwner,
+        canSubmitForReview: isOwner && row.status === 'IN_PROGRESS',
+        canReview: isManager && row.status === 'REVIEW',
+      },
+    };
   }
 
-  // ================= ASSIGN =================
   async assignTask(
     user_id: string,
     user_name: string,
@@ -131,22 +227,34 @@ export class TaskService {
       .where(eq(Task.id, task_id))
       .returning();
 
+    // 🔔 Notification
     await db.insert(Notification).values({
       user_id: assigneeId,
       type: 'TASK_ASSIGNED',
       message: `${user_name} assigned you to task "${updated.title}"`,
-      link: `/projects/${task.project_id}/tasks/${task.id}`,
+      link: `/project/${task.project_id}/task/${task.id}`,
+    });
+
+    // 📌 Activity
+    await db.insert(Activity).values({
+      user_id,
+      project_id: task.project_id,
+      type: 'TASK_ASSIGNED',
+      entity_type: 'task',
+      entity_id: task.id,
+      metadata: {
+        assigneeId,
+      },
     });
 
     return updated;
   }
 
-  // ================= STATUS =================
-  async updateStatus(
+  async updateDetails(
     user_id: string,
     user_name: string,
     task_id: string,
-    status: TaskStatus,
+    dto: UpdateTaskDto,
   ) {
     const task = await this.assertion.assertTaskExists(task_id);
     const role = await this.assertion.getUserRole(user_id, task.project_id);
@@ -155,8 +263,29 @@ export class TaskService {
       throw new ForbiddenException('You can only update your own tasks');
     }
 
+    const [updated] = await db
+      .update(Task)
+      .set(dto)
+      .where(eq(Task.id, task_id))
+      .returning();
+
+    return updated;
+  }
+
+  // ================= STATUS =================
+
+  async updateStatus(
+    user_id: string,
+    user_name: string,
+    task_id: string,
+    status: TaskStatus,
+  ) {
+    const task = await this.assertion.assertTaskExists(task_id);
+
     const payload: any = { status };
+
     if (status === 'IN_PROGRESS') payload.start_date = new Date().toISOString();
+
     if (status === 'DONE') payload.end_date = new Date().toISOString();
 
     const [updated] = await db
@@ -164,15 +293,6 @@ export class TaskService {
       .set(payload)
       .where(eq(Task.id, task_id))
       .returning();
-
-    if (task.assignee_id && task.assignee_id !== user_id) {
-      await db.insert(Notification).values({
-        user_id: task.assignee_id,
-        type: 'TASK_STATUS_UPDATED',
-        message: `${user_name} updated task "${updated.title}" to ${status}`,
-        link: `/projects/${task.project_id}/tasks/${task.id}`,
-      });
-    }
 
     return updated;
   }
@@ -188,8 +308,6 @@ export class TaskService {
 
     if (task.assignee_id !== user_id)
       throw new ForbiddenException('Not your task');
-    if (task.status !== 'IN_PROGRESS')
-      throw new BadRequestException('Task must be in progress');
 
     await db.transaction(async (tx) => {
       await tx
@@ -215,15 +333,27 @@ export class TaskService {
           ),
         );
 
+      // 🔔 Notifications
       for (const manager of managers) {
         await tx.insert(Notification).values({
-          read: false,
           user_id: manager.user_id,
           type: 'TASK_SUBMITTED',
           message: `${user_name} submitted task "${task.title}" for review`,
-          link: `/projects/${task.project_id}/tasks/${task.id}`,
+          link: `/project/${task.project_id}/task/${task.id}`,
         });
       }
+
+      // 📌 Activity
+      await tx.insert(Activity).values({
+        user_id,
+        project_id: task.project_id,
+        type: 'TASK_STATUS_CHANGED',
+        entity_type: 'task',
+        entity_id: task.id,
+        metadata: {
+          note,
+        },
+      });
     });
   }
 
@@ -237,10 +367,12 @@ export class TaskService {
     const task = await this.assertion.assertTaskExists(task_id);
     await this.assertion.assertManager(manager_id, task.project_id);
 
-    if (task.status !== 'REVIEW')
+    if (task.status !== 'REVIEW') {
       throw new BadRequestException('Task is not under review');
+    }
 
     await db.transaction(async (tx) => {
+      // 1️⃣ Upsert review
       await tx
         .insert(TaskReview)
         .values({
@@ -258,17 +390,21 @@ export class TaskService {
           },
         });
 
+      // 2️⃣ Resolve new status
       const newStatus = dto.decision === 'APPROVED' ? 'DONE' : 'IN_PROGRESS';
 
+      // 3️⃣ Update task status
       await tx
         .update(Task)
         .set({ status: newStatus })
         .where(eq(Task.id, task_id));
 
+      // 4️⃣ Remove submission
       await tx
         .delete(TaskSubmission)
         .where(eq(TaskSubmission.task_id, task_id));
 
+      // 5️⃣ Notification
       if (task.assignee_id) {
         await tx.insert(Notification).values({
           user_id: task.assignee_id,
@@ -277,9 +413,26 @@ export class TaskService {
             dto.decision === 'APPROVED'
               ? `${manager_name} approved task "${task.title}"`
               : `${manager_name} rejected task "${task.title}": ${dto.reject_comment}`,
-          link: `/projects/${task.project_id}/tasks/${task.id}`,
+          link: `/project/${task.project_id}/task/${task.id}`,
         });
       }
+
+      // 6️⃣ Activity (🔥 THIS IS THE IMPORTANT PART)
+      await tx.insert(Activity).values({
+        user_id: manager_id,
+        project_id: task.project_id,
+        type: 'TASK_STATUS_CHANGED',
+        entity_type: 'task',
+        entity_id: task.id,
+        metadata: {
+          from: 'REVIEW',
+          to: newStatus,
+          decision: dto.decision,
+          ...(dto.reject_comment && {
+            comment: dto.reject_comment,
+          }),
+        },
+      });
     });
   }
 
@@ -293,14 +446,29 @@ export class TaskService {
       .where(eq(Task.id, task_id))
       .returning();
 
+    // 🔔 Notification
     if (deleted?.assignee_id) {
       await db.insert(Notification).values({
         user_id: deleted.assignee_id,
         type: 'TASK_REMOVED',
         message: `${user_name} removed task "${deleted.title}"`,
-        link: `/projects/${task.project_id}/tasks`,
+        link: `/project/${task.project_id}/task`,
       });
     }
+
+    // 📌 Activity
+    await db.insert(Activity).values({
+      user_id,
+      project_id: task.project_id,
+      type: 'TASK_DELETED',
+      entity_type: 'task',
+      entity_id: task.id,
+      metadata: {
+        title: deleted.title,
+        status: deleted.status,
+        assignee_id: deleted.assignee_id,
+      },
+    });
 
     return deleted;
   }

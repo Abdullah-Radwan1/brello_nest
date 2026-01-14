@@ -35,7 +35,7 @@ export class ProjectController {
   }
   @Get('/lastProject')
   lastProject(@CurrentUser() user) {
-    return this.projectService.lastproject(user.id);
+    return this.projectService.lastProject(user.id);
   }
   @Patch(':project_id')
   update(

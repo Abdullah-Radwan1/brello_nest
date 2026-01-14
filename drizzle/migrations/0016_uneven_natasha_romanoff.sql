@@ -1,0 +1,1 @@
+ALTER TYPE "public"."activity_type" ADD VALUE 'TASK_DELETED' BEFORE 'COMMENT_ADDED';
