@@ -136,7 +136,7 @@ export class InvitationService {
             status === 'ACCEPTED'
               ? `You joined ${inviter.name}'s project`
               : `You declined ${inviter.name}'s invitation`,
-          link: `/projects/${invitation.project_id}`,
+          link: `/project/${invitation.project_id}`,
         },
         {
           user_id: invitation.inviter_id,
@@ -145,7 +145,7 @@ export class InvitationService {
             status === 'ACCEPTED'
               ? `${invitee.name} accepted your invitation`
               : `${invitee.name} declined your invitation`,
-          link: `/projects/${invitation.project_id}`,
+          link: `/project/${invitation.project_id}`,
         },
       ]);
 

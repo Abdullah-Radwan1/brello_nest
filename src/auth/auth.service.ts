@@ -35,16 +35,19 @@ export class AuthService {
     name,
     email,
     id,
+    color,
   }: {
     name: string;
     email: string;
     id: string;
+    color: string;
   }) {
     return {
       access_token: this.jwtService.sign({
         name,
         id,
         email,
+        color,
       }),
     };
   }

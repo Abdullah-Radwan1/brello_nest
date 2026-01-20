@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  Patch,
+  Param,
+} from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CurrentUser } from 'src/db/current-user.decorator';
 
@@ -49,10 +57,10 @@ export class NotificationsController {
   }
 
   // Mark a notification as read
-  @Post('read/:id')
+  @Patch('read/:notification_id')
   async markAsRead(
-    @CurrentUser() user: { id: string; name: string },
-    @Body('notification_id') notification_id: string,
+    @CurrentUser() user: { id: string },
+    @Param('notification_id') notification_id: string,
   ) {
     return this.notificationsService.markAsRead(user.id, notification_id);
   }

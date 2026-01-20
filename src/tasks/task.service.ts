@@ -263,11 +263,35 @@ export class TaskService {
       throw new ForbiddenException('You can only update your own tasks');
     }
 
+    const changes: Record<string, any> = {};
+    for (const key of Object.keys(dto)) {
+      if ((task as any)[key] !== (dto as any)[key]) {
+        changes[key] = {
+          from: (task as any)[key],
+          to: (dto as any)[key],
+        };
+      }
+    }
+
     const [updated] = await db
       .update(Task)
       .set(dto)
       .where(eq(Task.id, task_id))
       .returning();
+
+    if (Object.keys(changes).length > 0) {
+      await db.insert(Activity).values({
+        user_id,
+        project_id: task.project_id,
+        type: 'TASK_UPDATED',
+        entity_type: 'task',
+        entity_id: task.id,
+        metadata: {
+          actor_name: user_name,
+          changes,
+        },
+      });
+    }
 
     return updated;
   }
@@ -285,7 +309,6 @@ export class TaskService {
     const payload: any = { status };
 
     if (status === 'IN_PROGRESS') payload.start_date = new Date().toISOString();
-
     if (status === 'DONE') payload.end_date = new Date().toISOString();
 
     const [updated] = await db
@@ -293,6 +316,20 @@ export class TaskService {
       .set(payload)
       .where(eq(Task.id, task_id))
       .returning();
+
+    // 📌 Activity
+    await db.insert(Activity).values({
+      user_id,
+      project_id: task.project_id,
+      type: 'TASK_STATUS_CHANGED',
+      entity_type: 'task',
+      entity_id: task.id,
+      metadata: {
+        actor_name: user_name,
+        from: task.status,
+        to: status,
+      },
+    });
 
     return updated;
   }

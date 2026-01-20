@@ -6,8 +6,8 @@ import {
 import { CreateContributorDto } from './dto/create-contributor.dto';
 import { UpdateContributorDto } from './dto/update-contributor.dto';
 import { db } from 'src/db/drizzle';
-import { Contributor, Project, User } from 'src/db/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { Activity, Contributor, Project, Task, User } from 'src/db/schema';
+import { and, eq, inArray } from 'drizzle-orm';
 import { RemoveContributorsDto } from './dto/delete-contributor.dto';
 
 @Injectable()
@@ -40,29 +40,65 @@ export class ContributorsService {
 
   async removeMany(user_id: string, dto: RemoveContributorsDto) {
     const { contributor_ids, project_id } = dto;
-    // 1. get only manager_id instead of full project
-    const [project] = await db
-      .select({
-        manager_id: Project.manager_id,
-      })
-      .from(Project)
-      .where(eq(Project.id, project_id));
 
-    if (!project) {
-      throw new NotFoundException('Project not found');
-    }
+    return db.transaction(async (tx) => {
+      // 1️⃣ Check project + manager
+      const [project] = await tx
+        .select({ manager_id: Project.manager_id })
+        .from(Project)
+        .where(eq(Project.id, project_id));
 
-    // 2. check manager
-    if (project.manager_id !== user_id) {
-      throw new ForbiddenException(
-        'Only the project manager can delete contributors.',
-      );
-    }
+      if (!project) {
+        throw new NotFoundException('Project not found');
+      }
 
-    // 3. delete contributors
-    return db
-      .delete(Contributor)
-      .where(inArray(Contributor.user_id, contributor_ids))
-      .returning();
+      if (project.manager_id !== user_id) {
+        throw new ForbiddenException(
+          'Only the project manager can delete contributors.',
+        );
+      }
+
+      // 2️⃣ Get all tasks assigned to those contributors
+      const tasks = await tx
+        .select({ id: Task.id })
+        .from(Task)
+        .where(
+          and(
+            eq(Task.project_id, project_id),
+            inArray(Task.assignee_id, contributor_ids),
+          ),
+        );
+
+      const taskIds = tasks.map((t) => t.id);
+
+      // 3️⃣ Delete activities related to those tasks
+      if (taskIds.length > 0) {
+        await tx
+          .delete(Activity)
+          .where(
+            and(
+              eq(Activity.project_id, project_id),
+              eq(Activity.entity_type, 'task'),
+              inArray(Activity.entity_id, taskIds),
+            ),
+          );
+      }
+
+      // 4️⃣ Delete tasks (reviews + submissions cascade)
+      if (taskIds.length > 0) {
+        await tx.delete(Task).where(inArray(Task.id, taskIds));
+      }
+
+      // 5️⃣ Delete contributors
+      return tx
+        .delete(Contributor)
+        .where(
+          and(
+            eq(Contributor.project_id, project_id),
+            inArray(Contributor.user_id, contributor_ids),
+          ),
+        )
+        .returning();
+    });
   }
 }

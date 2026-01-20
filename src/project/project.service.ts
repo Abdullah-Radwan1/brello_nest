@@ -87,7 +87,7 @@ export class ProjectService {
           user_id: c.invited_user_id,
           type: NotificationTypeTS.INVITATION,
           message: `${currentUsername} has invited you to project "${createdProject.name}"`,
-          link: `/projects/${createdProject.id}`,
+          link: `/project/${createdProject.id}`,
         })),
       );
     }

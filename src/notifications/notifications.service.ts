@@ -89,6 +89,8 @@ export class NotificationsService {
 
   // Mark a single notification as read
   async markAsRead(user_id: string, notification_id: string) {
+    if (!user_id) throw new Error('user_id is required');
+    if (!notification_id) throw new Error('notification_id is required');
     const [updated] = await db
       .update(Notification)
       .set({ read: true })

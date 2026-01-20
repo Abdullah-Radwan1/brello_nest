@@ -29,6 +29,7 @@ export class AuthController {
       email: user.email,
       id: user.id,
       name: user.name,
+      color: user.color,
     });
 
     // set cookie with the correct variable
@@ -41,7 +42,12 @@ export class AuthController {
     });
 
     return res.send({
-      user: { email: user.email, name: user.name },
+      user: {
+        email: user.email,
+        name: user.name,
+        id: user.id,
+        color: user.color,
+      },
       message: 'Logged in successfully',
     });
   }
