@@ -5,6 +5,9 @@ import { ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard } from './auth/jwt.auth.guard.js';
 import dotenv from 'dotenv';
 
+// Register tsconfig paths for development
+import 'tsconfig-paths/register';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 

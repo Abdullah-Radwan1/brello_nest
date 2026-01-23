@@ -3,6 +3,9 @@ import { AppModule } from './src/app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+// Register tsconfig paths for runtime resolution
+import 'tsconfig-paths/register';
+
 // Use require here, NOT import
 const serverlessExpress = require('@vendia/serverless-express');
 
