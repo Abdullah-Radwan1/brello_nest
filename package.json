@@ -26,6 +26,7 @@
     "dbCredentials": "postgresql://neondb_owner:npg_rjy1htLqpoN9@ep-patient-moon-ad7ti7l3-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
   },
   "dependencies": {
+    "@codegenie/serverless-express": "vendia/serverless-express",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -35,6 +36,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.1.0",
     "@nestjs/throttler": "^6.5.0",
+    "@vendia/serverless-express": "^4.12.6",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
