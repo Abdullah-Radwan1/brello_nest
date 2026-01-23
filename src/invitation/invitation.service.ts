@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { db } from 'src/db/drizzle';
+import { db } from '@/db/drizzle';
 import {
   Contributor,
   Invitation,
