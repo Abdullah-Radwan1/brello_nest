@@ -12,7 +12,7 @@ import { ContributorsService } from './contributors.service';
 import { CreateContributorDto } from './dto/create-contributor.dto';
 import { UpdateContributorDto } from './dto/update-contributor.dto';
 import { RemoveContributorsDto } from './dto/delete-contributor.dto';
-import { CurrentUser } from '../db/current-user.decoratororator';
+import { CurrentUser } from '../db/current-user.decorator';
 
 @Controller('contributors')
 export class ContributorsController {
