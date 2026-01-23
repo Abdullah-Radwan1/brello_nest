@@ -13,7 +13,7 @@ import { Public } from './public.decorator';
 import type { Request, Response } from 'express';
 import { SignupDto } from './dto/auth.dto';
 import { CurrentUser } from '../db/current-user.decorator';
-
+const isProd = process.env.NODE_ENV === 'production';
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -35,8 +35,8 @@ export class AuthController {
     // set cookie with the correct variable
     res.cookie('access_token', access_token, {
       httpOnly: true,
-      secure: false, // must be false on localhost
-      sameSite: 'strict', // allows cross-port requests
+        secure: isProd, // must be false on localhost
+  sameSite: isProd ? 'none' : 'lax', // 🔴 allow cross-site in prod
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
@@ -59,7 +59,7 @@ export class AuthController {
 
     res.cookie('access_token', access_token, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: 'strict', // changed from strict to allow cross-port
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
