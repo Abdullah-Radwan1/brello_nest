@@ -15,10 +15,7 @@ async function bootstrap() {
   // parse cookies so `request.cookies` is populated (used by JwtStrategy)
   app.use(cookieParser());
   app.enableCors({
-    origin: [
-      'http://localhost:8080',
-      'https://managment-system-livid.vercel.app/',
-    ],
+    origin: ['http://localhost:8080', 'https://apex-nest.vercel.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
