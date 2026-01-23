@@ -12,7 +12,7 @@ import {
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { CurrentUser } from 'src/db/current-user.decorator';
+import { CurrentUser } from '../db/current-user.decoratororator';
 
 @Controller('projects')
 export class ProjectController {

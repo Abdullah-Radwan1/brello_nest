@@ -12,7 +12,7 @@ import {
 import { InvitationService } from './invitation.service';
 import { IsEnum } from 'class-validator';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
-import { CurrentUser } from 'src/db/current-user.decorator';
+import { CurrentUser } from '../db/current-user.decoratororator';
 
 // ✅ Runtime-safe string enum for invitation status
 export const InvitationStatusTS = ['ACCEPTED', 'DECLINED'] as const;

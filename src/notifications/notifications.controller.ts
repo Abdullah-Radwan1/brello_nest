@@ -8,7 +8,7 @@ import {
   Param,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { CurrentUser } from 'src/db/current-user.decorator';
+import { CurrentUser } from '../db/current-user.decoratororator';
 
 @Controller('notifications')
 export class NotificationsController {

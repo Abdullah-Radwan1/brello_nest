@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { db } from '../db/drizzle';
-import { Contributor, Project, Task, User } from 'src/db/schema';
+import { Contributor, Project, Task } from 'src/db/schema';
 import { and, eq } from 'drizzle-orm';
 
 @Injectable()

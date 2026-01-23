@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { CurrentUser } from 'src/db/current-user.decorator';
+import { CurrentUser } from '../db/current-user.decoratororator';
 import {
   AssignTaskDto,
   UpdateTaskDto,

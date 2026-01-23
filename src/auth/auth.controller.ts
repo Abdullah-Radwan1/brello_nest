@@ -12,7 +12,7 @@ import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
 import type { Request, Response } from 'express';
 import { SignupDto } from './dto/login.dto';
-import { CurrentUser } from 'src/db/current-user.decorator';
+import { CurrentUser } from '../db/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {

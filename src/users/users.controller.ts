@@ -11,7 +11,7 @@ import {
 import { UsersService } from './users.service.js';
 
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CurrentUser } from 'src/db/current-user.decorator';
+import { CurrentUser } from '../db/current-user.decoratororator';
 import { SignupDto } from 'src/auth/dto/login.dto';
 import { Public } from 'src/auth/public.decorator';
 
