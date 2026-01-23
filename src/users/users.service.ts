@@ -23,7 +23,10 @@ export class UsersService {
     const offset = (page - 1) * limit;
 
     // Build where condition
-    let whereCondition: any = sql`${User.id} != ${currentuser_id}`; // exclude current user
+    let whereCondition = and(
+      ne(User.id, currentuser_id), // exclude current user
+      eq(User.allow_invitations, true), // only users who allow invitations
+    );
 
     if (search?.trim()) {
       whereCondition = and(

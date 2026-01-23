@@ -114,8 +114,8 @@ export class NotificationsService {
       .returning();
   }
 
-  // Cron job to delete notifications older than 2 days
-  @Cron('0 0 */48 * *') // Every 48 hours (technically every 2 days)
+  // Runs every 48 hours (48 * 60 * 60 * 1000 ms)
+  @Cron('0 0 */2 * *') // runs every 2 days at midnight
   async deleteOldNotifications() {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 2); // 2 days old
@@ -124,9 +124,5 @@ export class NotificationsService {
       .delete(Notification)
       .where(lt(Notification.createdAt, cutoff))
       .returning();
-
-    console.log(
-      `[Notifications Cron] Deleted ${deleted.length} old notifications`,
-    );
   }
 }

@@ -100,7 +100,7 @@ export class TaskService {
         assignee: {
           id: User.id,
           name: User.name,
-          email: User.email,
+          // email: User.email,
         },
       })
       .from(Task)
