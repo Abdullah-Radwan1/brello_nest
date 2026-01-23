@@ -8,14 +8,14 @@ import {
   Project,
   Task,
   User,
-} from 'src/db/schema';
+} from '../db/schema';
 import { and, desc, eq, or, sql } from 'drizzle-orm';
 import {
   CreateProjectInput,
   InvitationStatusTS,
   NotificationTypeTS,
   RoleEnumTS,
-} from 'src/db/types';
+} from '../db/types';
 import { assertionService } from '../assertion/assertion.service';
 import { UpdateProjectDto } from './dto/update-project.dto';
 

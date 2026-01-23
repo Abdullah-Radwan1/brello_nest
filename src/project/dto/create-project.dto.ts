@@ -6,8 +6,8 @@ import {
   IsOptional,
 } from 'class-validator';
 
-import { InvitationInput } from 'src/db/types';
-import type { ProjectIconType } from 'src/db/schema';
+import { InvitationInput } from '../../db/types';
+import type { ProjectIconType } from '../../db/schema';
 export class CreateProjectDto {
   @IsString()
   @MinLength(6)

@@ -6,7 +6,7 @@ import {
 import { CreateContributorDto } from './dto/create-contributor.dto';
 import { UpdateContributorDto } from './dto/update-contributor.dto';
 import { db } from '../db/drizzle';
-import { Activity, Contributor, Project, Task, User } from 'src/db/schema';
+import { Activity, Contributor, Project, Task, User } from '../db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { RemoveContributorsDto } from './dto/delete-contributor.dto';
 

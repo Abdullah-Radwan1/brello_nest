@@ -1,4 +1,4 @@
-import { Activity, ActivityType } from 'src/db/schema';
+import { Activity, ActivityType } from '../db/schema';
 
 async function logActivity(
   tx: any,

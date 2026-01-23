@@ -4,11 +4,11 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from '../users/users.service';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { db } from '../db/drizzle';
-import { User } from 'src/db/schema';
+import { User } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { SignupDto } from './dto/auth.dto';
 

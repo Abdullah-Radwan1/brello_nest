@@ -1,7 +1,6 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateTaskDto } from './create-task.dto';
+
 import { IsEnum, IsUUID } from 'class-validator';
-import { Task_enums } from 'src/db/schema';
+import { Task_enums } from '../../db/schema';
 
 export class UpdateTaskStatusDto {
   @IsEnum(Task_enums.enumValues)

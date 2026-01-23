@@ -1,6 +1,6 @@
-// src/auth/dto/login.dto.ts
+
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
-import type { UserColorType } from 'src/db/schema';
+import type { UserColorType } from '../../db/schema';
 
 export class LoginDto {
   @IsEmail({}, { message: 'Please provide a valid email address' })

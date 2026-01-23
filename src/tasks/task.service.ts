@@ -15,7 +15,7 @@ import {
   TaskReview,
   TaskSubmission,
   User,
-} from 'src/db/schema';
+} from '../db/schema';
 import { and, eq } from 'drizzle-orm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { assertionService } from '../assertion/assertion.service';

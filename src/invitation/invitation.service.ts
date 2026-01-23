@@ -6,9 +6,9 @@ import {
   Notification,
   Project,
   User,
-} from 'src/db/schema';
+} from '../db/schema';
 import { and, desc, eq, inArray } from 'drizzle-orm';
-import { NotificationTypeTS, RoleEnumTS } from 'src/db/types';
+import { NotificationTypeTS, RoleEnumTS } from '../db/types';
 
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { assertionService } from '../assertion/assertion.service';
