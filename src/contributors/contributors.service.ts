@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateContributorDto } from './dto/create-contributor.dto';
 import { UpdateContributorDto } from './dto/update-contributor.dto';
-import { db } from '@/db/drizzle';
+import { db } from '../db/drizzle';
 import { Activity, Contributor, Project, Task, User } from 'src/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { RemoveContributorsDto } from './dto/delete-contributor.dto';

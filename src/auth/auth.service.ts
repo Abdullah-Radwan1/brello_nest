@@ -7,7 +7,7 @@ import {
 import { UsersService } from 'src/users/users.service';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { db } from '@/db/drizzle';
+import { db } from '../db/drizzle';
 import { User } from 'src/db/schema';
 import { eq } from 'drizzle-orm';
 import { SignupDto } from './dto/login.dto';

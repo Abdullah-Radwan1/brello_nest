@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Notification, User } from 'src/db/schema';
 import { and, eq, sql, desc, lt } from 'drizzle-orm';
-import { db } from '@/db/drizzle';
+import { db } from '../db/drizzle';
 import { Cron } from '@nestjs/schedule';
 
 @Injectable()

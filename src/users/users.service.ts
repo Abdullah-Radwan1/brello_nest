@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { db } from '@/db/drizzle';
+import { db } from '../db/drizzle';
 import { Contributor, Invitation, Project, Task, User } from 'src/db/schema'; // ده الجدول اللي عملناه في drizzle.ts/schema
 import bcrypt from 'bcrypt';
 import { and, asc, count, eq, ilike, like, ne, sql } from 'drizzle-orm';
