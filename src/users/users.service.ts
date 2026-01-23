@@ -5,11 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { db } from '../db/drizzle';
-import { Contributor, Invitation, Project, Task, User } from 'src/db/schema'; // ده الجدول اللي عملناه في drizzle.ts/schema
+import { Contributor, Invitation, Project, Task, User } from '../db/schema'; // ده الجدول اللي عملناه في drizzle.ts/schema
 import bcrypt from 'bcrypt';
-import { and, asc, count, eq, ilike, like, ne, sql } from 'drizzle-orm';
+import { and, asc, count, eq, ilike, ne, sql } from 'drizzle-orm';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { SignupDto } from 'src/auth/dto/login.dto';
+import { SignupDto } from '../auth/dto/auth.dto';
 
 @Injectable()
 export class UsersService {

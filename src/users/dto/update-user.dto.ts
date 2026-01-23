@@ -7,8 +7,8 @@ import {
   IsBoolean,
   IsEmail,
 } from 'class-validator';
-import { SignupDto } from 'src/auth/dto/login.dto';
-import type { UserColorType } from 'src/db/schema';
+import { SignupDto } from '../../auth/dto/auth.dto';
+import type { UserColorType } from '../../db/schema';
 
 export class UpdateUserDto extends PartialType(SignupDto) {
   @IsOptional()

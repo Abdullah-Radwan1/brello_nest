@@ -11,9 +11,9 @@ import {
 import { UsersService } from './users.service.js';
 
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CurrentUser } from '../db/current-user.decoratororator';
-import { SignupDto } from 'src/auth/dto/login.dto';
-import { Public } from 'src/auth/public.decorator';
+import { CurrentUser } from '../db/current-user.decorator.js';
+import { SignupDto } from '../auth/dto/auth.dto.js';
+import { Public } from '../auth/public.decorator.js';
 
 @Controller('users')
 export class UsersController {

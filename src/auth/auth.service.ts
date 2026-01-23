@@ -10,7 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { db } from '../db/drizzle';
 import { User } from 'src/db/schema';
 import { eq } from 'drizzle-orm';
-import { SignupDto } from './dto/login.dto';
+import { SignupDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {

@@ -11,7 +11,7 @@ import { LocalAuthGuard } from './local.auth.guard';
 import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
 import type { Request, Response } from 'express';
-import { SignupDto } from './dto/login.dto';
+import { SignupDto } from './dto/auth.dto';
 import { CurrentUser } from '../db/current-user.decorator';
 
 @Controller('auth')

@@ -18,8 +18,8 @@ import {
 } from 'src/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { assertionService } from 'src/assertion/assertion.service';
-import { TaskStatus, TaskStatusTS } from './dto/submit-review.dto';
+import { assertionService } from '../assertion/assertion.service';
+import { TaskStatus } from './dto/submit-review.dto';
 import { ReviewTaskDTO } from './dto/submit-review.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 

@@ -11,7 +11,7 @@ import { and, desc, eq, inArray } from 'drizzle-orm';
 import { NotificationTypeTS, RoleEnumTS } from 'src/db/types';
 
 import { CreateInvitationDto } from './dto/create-invitation.dto';
-import { assertionService } from 'src/assertion/assertion.service';
+import { assertionService } from '../assertion/assertion.service';
 
 @Injectable()
 export class InvitationService {

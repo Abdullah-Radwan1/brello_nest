@@ -16,7 +16,7 @@ import {
   NotificationTypeTS,
   RoleEnumTS,
 } from 'src/db/types';
-import { assertionService } from 'src/assertion/assertion.service';
+import { assertionService } from '../assertion/assertion.service';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
