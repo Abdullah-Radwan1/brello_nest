@@ -15,10 +15,10 @@ async function bootstrap() {
 
   const allowedOrigins = [
     process.env.FRONTEND_URL, // production
+    'http://localhost:8080',
   ].filter(Boolean);
 
-  const previewRegex =
-    /^https:\/\/managment-system-[a-z0-9-]+\.vercel\.app$/;
+  const previewRegex = /^https:\/\/managment-system-[a-z0-9-]+\.vercel\.app$/;
 
   app.enableCors({
     origin: (origin, callback) => {

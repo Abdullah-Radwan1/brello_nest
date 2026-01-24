@@ -35,8 +35,8 @@ export class AuthController {
     // set cookie with the correct variable
     res.cookie('access_token', access_token, {
       httpOnly: true,
-        secure: isProd, // must be false on localhost
-  sameSite: isProd ? 'none' : 'lax', // 🔴 allow cross-site in prod
+      secure: isProd, // must be false on localhost
+      sameSite: isProd ? 'none' : 'lax', // 🔴 allow cross-site in prod
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
@@ -60,7 +60,7 @@ export class AuthController {
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict', // changed from strict to allow cross-port
+      sameSite: isProd ? 'none' : 'lax', // 🔴 allow cross-site in prod
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
@@ -77,7 +77,7 @@ export class AuthController {
     // Clear the HTTP-only cookie
     res.clearCookie('access_token', {
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: isProd ? 'none' : 'lax', // 🔴 allow cross-site in prod
       secure: process.env.NODE_ENV === 'production',
     });
 
