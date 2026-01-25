@@ -29,9 +29,13 @@ export class ProjectController {
     );
   }
 
-  @Get()
-  findProjects(@CurrentUser() user) {
-    return this.projectService.findAllMyProjects(user.id);
+  @Get('/myProjects')
+  findMyprojects(@CurrentUser() user) {
+    return this.projectService.findMyProjects(user.id);
+  }
+  @Get('/teamProjects')
+  findTeamProjects(@CurrentUser() user) {
+    return this.projectService.findTeamProjects(user.id);
   }
   @Get('/lastProject')
   lastProject(@CurrentUser() user) {

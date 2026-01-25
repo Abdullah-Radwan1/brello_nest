@@ -95,56 +95,56 @@ export class ProjectService {
     return createdProject;
   }
 
-  findAllMyProjects(user_id: string) {
-    return (
-      db
-        .select({
-          id: Project.id,
-          name: Project.name,
-          description: Project.description,
-          createdAt: Project.createdAt,
-          managerName: User.name,
-          icon: Project.icon,
-          // Determine the role of the current user for this project
-          // If the current user is the manager → 'manager', otherwise 'contributor'
-          // This is a literal expression, so it does not require GROUP BY
-          role: sql<'manager' | 'contributor'>`
-          CASE
-            WHEN ${Project.manager_id} = ${user_id} THEN 'manager'
-            ELSE 'contributor'
-          END
-        `.as('role'),
-
-          // Count the number of distinct contributors for this project
-          contributorsCount: sql<number>`COUNT(DISTINCT ${Contributor.id})`.as(
-            'contributorsCount',
-          ),
-
-          // Count the number of distinct tasks for this project
-          tasksCount: sql<number>`COUNT(DISTINCT ${Task.id})`.as('tasksCount'),
-        })
-        .from(Project) // The main table we are selecting from
-
-        // Join the User table to get manager information
-        .leftJoin(User, eq(Project.manager_id, User.id))
-
-        // Join the Contributor table to count contributors and filter by user
-        .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
-
-        // Join the Task table to count tasks per project
-        .leftJoin(Task, eq(Task.project_id, Project.id))
-
-        // Filter projects where the current user is either the manager or a contributor
-        .where(
-          or(eq(Project.manager_id, user_id), eq(Contributor.user_id, user_id)),
-        )
-
-        //Every column in your SELECT that is not inside an aggregate must appear in GROUP BY.
-        // Group results by Project ID and manager name
-        // Needed because we use COUNT() aggregation
-        .groupBy(Project.id, User.name)
-    );
+  findMyProjects(user_id: string) {
+    return db
+      .select({
+        id: Project.id,
+        name: Project.name,
+        description: Project.description,
+        createdAt: Project.createdAt,
+        managerName: User.name,
+        icon: Project.icon,
+        role: sql<'manager'>`'manager'`.as('role'),
+        contributorsCount: sql<number>`COUNT(DISTINCT ${Contributor.id})`.as(
+          'contributorsCount',
+        ),
+        tasksCount: sql<number>`COUNT(DISTINCT ${Task.id})`.as('tasksCount'),
+      })
+      .from(Project)
+      .leftJoin(User, eq(Project.manager_id, User.id))
+      .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
+      .leftJoin(Task, eq(Task.project_id, Project.id))
+      .where(eq(Project.manager_id, user_id))
+      .groupBy(Project.id, User.name);
   }
+  findTeamProjects(user_id: string) {
+    return db
+      .select({
+        id: Project.id,
+        name: Project.name,
+        description: Project.description,
+        createdAt: Project.createdAt,
+        managerName: User.name,
+        icon: Project.icon,
+        role: sql<'contributor'>`'contributor'`.as('role'),
+        contributorsCount: sql<number>`COUNT(DISTINCT ${Contributor.id})`.as(
+          'contributorsCount',
+        ),
+        tasksCount: sql<number>`COUNT(DISTINCT ${Task.id})`.as('tasksCount'),
+      })
+      .from(Project)
+      .leftJoin(User, eq(Project.manager_id, User.id))
+      .leftJoin(Contributor, eq(Contributor.project_id, Project.id))
+      .leftJoin(Task, eq(Task.project_id, Project.id))
+      .where(
+        and(
+          eq(Contributor.user_id, user_id),
+          sql`${Project.manager_id} != ${user_id}`, // Exclude manager projects
+        ),
+      )
+      .groupBy(Project.id, User.name);
+  }
+
   async findOne(user_id: string, Project_id: string) {
     return db
       .select({
