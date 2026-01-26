@@ -28,11 +28,14 @@ export const ActivityTypeEnum = pgEnum('activity_type', [
   'TASK_UPDATED',
   'TASK_STATUS_CHANGED',
   'TASK_ASSIGNED',
-  'TASK_DELETED', // ✅ REQUIRED
+  'TASK_DELETED',
 
-  'COMMENT_ADDED',
   'INVITATION_SENT',
   'INVITATION_ACCEPTED',
+  'INVITATION_DECLINED',
+  'INVITATION_CANCELLED',
+
+  'COMMENT_ADDED',
 ]);
 
 export type ActivityType = (typeof ActivityTypeEnum.enumValues)[number];
@@ -243,7 +246,8 @@ export const Notification = pgTable('Notification', {
     .references(() => User.id, { onDelete: 'cascade' }),
   type: Notification_enums('type').notNull(),
   message: text('message').notNull(),
-  link: varchar('link', { length: 255 }).notNull(),
+  link: text('link'),
+
   createdAt: timestamp('created_at').defaultNow(),
   read: boolean('read').notNull().default(false),
 });

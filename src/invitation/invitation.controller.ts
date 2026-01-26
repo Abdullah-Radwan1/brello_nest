@@ -53,7 +53,7 @@ export class InvitationController {
 
   @Get('/project')
   getProjectInvitations(@Query('project_id') project_id: string) {
-    return this.invitationService.getProjectInvitationsfunc(project_id);
+    return this.invitationService.getProjectInvitations(project_id);
   }
   // Accept or decline an invitation
   // ---------------------------

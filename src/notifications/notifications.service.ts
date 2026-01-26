@@ -120,7 +120,7 @@ export class NotificationsService {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 2); // 2 days old
 
-    const deleted = await db
+    await db
       .delete(Notification)
       .where(lt(Notification.createdAt, cutoff))
       .returning();
