@@ -169,7 +169,7 @@ export class InvitationService {
               ? `You joined ${inviter.name}'s project`
               : `You declined ${inviter.name}'s invitation`,
           ...(status === 'ACCEPTED'
-            ? { link: `/teamProjects/${invitation.project_id}` }
+            ? { link: `/teamProjects/project/${invitation.project_id}` }
             : { link: null }),
         },
         {
