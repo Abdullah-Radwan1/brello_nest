@@ -180,7 +180,7 @@ export class InvitationService {
               ? `${invitee.name} accepted your invitation`
               : `${invitee.name} declined your invitation`,
           ...(status === 'ACCEPTED'
-            ? { link: `/myProjects/${invitation.project_id}` }
+            ? { link: `/myProjects/project/${invitation.project_id}` }
             : { link: null }),
         },
       ]);

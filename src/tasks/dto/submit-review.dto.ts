@@ -1,4 +1,4 @@
-import { IsEnum, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 // -------------------------
 // Task Status
@@ -14,7 +14,8 @@ export type TaskPriority = (typeof TaskPriorityTs)[number];
 
 export class ReviewTaskDTO {
   @IsString()
-  reject_comment: string;
+  @IsOptional()
+  reject_comment?: string;
 
   @IsEnum(TaskDecisionsTS)
   decision: TaskDecisions;

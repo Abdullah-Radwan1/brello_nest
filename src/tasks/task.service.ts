@@ -376,7 +376,7 @@ export class TaskService {
           user_id: manager.user_id,
           type: 'TASK_SUBMITTED',
           message: `${user_name} submitted task "${task.title}" for review`,
-          link: `/myProjects/${task.project_id}/task/${task.id}`,
+          link: `/myProjects/project/${task.project_id}/task/${task.id}`,
         });
       }
 
@@ -416,7 +416,7 @@ export class TaskService {
           task_id,
           reviewer_id: manager_id,
           status: dto.decision,
-          comment: dto.reject_comment,
+          comment: dto.reject_comment ?? '',
         })
         .onConflictDoUpdate({
           target: TaskReview.task_id,
