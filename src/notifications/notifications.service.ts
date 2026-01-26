@@ -114,11 +114,10 @@ export class NotificationsService {
       .returning();
   }
 
-  // Runs every 48 hours (48 * 60 * 60 * 1000 ms)
-  @Cron('0 0 */2 * *') // runs every 2 days at midnight
+  @Cron('0 0 * * *') // كل يوم عند منتصف الليل
   async deleteOldNotifications() {
     const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 2); // 2 days old
+    cutoff.setDate(cutoff.getDate() - 2); // 2 أيام قبل الآن
 
     await db
       .delete(Notification)

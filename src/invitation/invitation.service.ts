@@ -107,12 +107,12 @@ export class InvitationService {
   async getProjectInvitations(project_id: string) {
     return db
       .select({
-        id: Invitation.id,
-        email: User.email,
-        name: User.name,
+        invitation_id: Invitation.id, // Match backend field name
+        invitedUserEmail: User.email, // Match backend field name
+        invitedUserName: User.name, // Match backend field name
         status: Invitation.status,
-        CreatedAt: Invitation.createdAt,
-        project_id: Invitation.project_id,
+        createdAt: Invitation.createdAt,
+        project_id: Invitation.project_id, // Add project_id if needed
       })
       .from(Invitation)
       .leftJoin(User, eq(User.id, Invitation.invited_user_id))
@@ -169,7 +169,7 @@ export class InvitationService {
               ? `You joined ${inviter.name}'s project`
               : `You declined ${inviter.name}'s invitation`,
           ...(status === 'ACCEPTED'
-            ? { link: `/project/${invitation.project_id}` }
+            ? { link: `/teamProjects/${invitation.project_id}` }
             : { link: null }),
         },
         {
@@ -180,7 +180,7 @@ export class InvitationService {
               ? `${invitee.name} accepted your invitation`
               : `${invitee.name} declined your invitation`,
           ...(status === 'ACCEPTED'
-            ? { link: `/project/${invitation.project_id}` }
+            ? { link: `/myProjects/${invitation.project_id}` }
             : { link: null }),
         },
       ]);

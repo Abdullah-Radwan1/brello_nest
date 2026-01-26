@@ -73,7 +73,7 @@ export class TaskService {
           user_id: task.assignee_id,
           type: 'TASK_ASSIGNED',
           message: `${user_name} assigned you to task "${task.title}"`,
-          link: `/project/${task.project_id}/task/${task.id}`,
+          link: `/teamProjects/project/${task.project_id}/task/${task.id}`,
         });
       }
 
@@ -232,7 +232,7 @@ export class TaskService {
       user_id: assigneeId,
       type: 'TASK_ASSIGNED',
       message: `${user_name} assigned you to task "${updated.title}"`,
-      link: `/project/${task.project_id}/task/${task.id}`,
+      link: `/teamProjects/project/${task.project_id}/task/${task.id}`,
     });
 
     // 📌 Activity
@@ -376,7 +376,7 @@ export class TaskService {
           user_id: manager.user_id,
           type: 'TASK_SUBMITTED',
           message: `${user_name} submitted task "${task.title}" for review`,
-          link: `/project/${task.project_id}/task/${task.id}`,
+          link: `/myProjects/${task.project_id}/task/${task.id}`,
         });
       }
 
@@ -450,7 +450,7 @@ export class TaskService {
             dto.decision === 'APPROVED'
               ? `${manager_name} approved task "${task.title}"`
               : `${manager_name} rejected task "${task.title}": ${dto.reject_comment}`,
-          link: `/project/${task.project_id}/task/${task.id}`,
+          link: `/teamProjects/project/${task.project_id}/task/${task.id}`,
         });
       }
 
@@ -489,7 +489,7 @@ export class TaskService {
         user_id: deleted.assignee_id,
         type: 'TASK_REMOVED',
         message: `${user_name} removed task "${deleted.title}"`,
-        link: `/project/${task.project_id}/task`,
+        link: null,
       });
     }
 
