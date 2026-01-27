@@ -63,14 +63,14 @@ export const TaskPriorityEnum = pgEnum('task_priority', [
   'URGENT',
 ]);
 export const ColorEnum = pgEnum('color_enums', [
-  'RED',
-  'BLUE',
-  'PURPLE',
-  'BLUE',
+  'VIOLET',
+  'TEAL',
+  'AMBER',
   'PINK',
-  'GREEN',
-  'ROYALBLUE',
+  'EMERALD',
+  'INDIGO',
 ]);
+
 export type UserColorType = (typeof ColorEnum.enumValues)[number];
 // Create the enum in Drizzle
 export const ProjectIconEnum = pgEnum('project_icon_enum', [
@@ -92,7 +92,7 @@ export const User = pgTable('User', {
   password: varchar('password', { length: 255 }).notNull(),
   name: varchar('name', { length: 255 }).notNull().unique(),
   allow_invitations: boolean().default(true),
-  color: ColorEnum('color').notNull().default('PURPLE'), // uses color_enum now
+  color: ColorEnum('color').notNull().default('VIOLET'), // uses color_enum now
 });
 
 // ===== PROJECTS =====

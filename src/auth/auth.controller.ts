@@ -29,7 +29,6 @@ export class AuthController {
       email: user.email,
       id: user.id,
       name: user.name,
-      color: user.color,
     });
 
     // set cookie with the correct variable
@@ -47,6 +46,7 @@ export class AuthController {
         name: user.name,
         id: user.id,
         color: user.color,
+        allow_invitations: user.allow_invitations,
       },
       message: 'Logged in successfully',
     });
