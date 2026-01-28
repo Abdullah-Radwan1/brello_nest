@@ -1,3 +1,3 @@
 export const jwtConstants = {
-  secret: 'W32@#@#AsaspDUUUDEThisISASecrtKey@$@',
+  secret: process.env.JWT_SECRET || 'dev-secret-key-change-in-production',
 };

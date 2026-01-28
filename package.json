@@ -22,8 +22,7 @@
   "drizzle-kit": {
     "out": "./src/db/drizzle/migrations",
     "schema": "./src/db/schema.ts",
-    "driver": "postgres-js",
-    "dbCredentials": "postgresql://neondb_owner:npg_rjy1htLqpoN9@ep-patient-moon-ad7ti7l3-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    "driver": "postgres-js"
   },
   "dependencies": {
     "@codegenie/serverless-express": "vendia/serverless-express",
@@ -42,6 +41,7 @@
     "class-validator": "^0.14.3",
     "cookie-parser": "^1.4.7",
     "drizzle-orm": "^0.44.7",
+    "helmet": "^8.1.0",
     "nestjs-mapped-types": "^3.0.5",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

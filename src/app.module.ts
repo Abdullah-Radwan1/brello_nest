@@ -11,6 +11,8 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { InvitationModule } from './invitation/invitation.module.js';
 import { AuthorizationModule } from './assertion/assertion.module.js';
 import { AiModule } from './ai/ai.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -23,8 +25,31 @@ import { AiModule } from './ai/ai.module';
     InvitationModule,
     AuthorizationModule,
     AiModule,
+    // ThrottlerModule.forRoot([
+    //   {
+    //     name: 'global',
+    //     ttl: 60000, // 60 seconds
+    //     limit: 500, // 500 requests per minute globally
+    //   },
+    //   {
+    //     name: 'login',
+    //     ttl: 60000,
+    //     limit: 30, // 30 login attempts per minute
+    //   },
+    //   {
+    //     name: 'check-name',
+    //     ttl: 60000,
+    //     limit: 100, // 100 name checks per minute
+    //   },
+    // ]),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    //   AppService,
+    //   {
+    //     provide: APP_GUARD,
+    //     useClass: ThrottlerGuard,
+    //   },
+  ],
 })
 export class AppModule {}

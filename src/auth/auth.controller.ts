@@ -13,6 +13,7 @@ import { Public } from './public.decorator';
 import type { Request, Response } from 'express';
 import { SignupDto } from './dto/auth.dto';
 import { CurrentUser } from '../db/current-user.decorator';
+import { Throttle } from '@nestjs/throttler';
 const isProd = process.env.NODE_ENV === 'production';
 @Controller('auth')
 export class AuthController {
@@ -21,6 +22,7 @@ export class AuthController {
   @Public()
   @UseGuards(LocalAuthGuard) // uses validate from LocalStrategy
   @Post('login')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async login(@Req() req: Request, @Res() res: Response) {
     const user = req.user as any;
 
@@ -34,8 +36,8 @@ export class AuthController {
     // set cookie with the correct variable
     res.cookie('access_token', access_token, {
       httpOnly: true,
-      secure: isProd, // must be false on localhost
-      sameSite: isProd ? 'none' : 'lax', // 🔴 allow cross-site in prod
+      secure: isProd, // false in dev, true in prod
+      sameSite: 'strict', // Prevent CSRF attacks
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
@@ -59,8 +61,8 @@ export class AuthController {
 
     res.cookie('access_token', access_token, {
       httpOnly: true,
-      secure: true,
-      sameSite: isProd ? 'none' : 'lax', // 🔴 allow cross-site in prod
+      secure: isProd, // false in dev, true in prod
+      sameSite: 'strict', // Prevent CSRF attacks
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
@@ -77,8 +79,8 @@ export class AuthController {
     // Clear the HTTP-only cookie
     res.clearCookie('access_token', {
       httpOnly: true,
-      sameSite: isProd ? 'none' : 'lax', // 🔴 allow cross-site in prod
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict', // Prevent CSRF attacks
+      secure: isProd, // false in dev, true in prod
     });
 
     return { message: 'Logged out successfully' };

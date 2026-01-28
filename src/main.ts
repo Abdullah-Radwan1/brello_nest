@@ -2,6 +2,7 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
 
 import { AppModule } from './app.module.js';
 import { JwtAuthGuard } from './auth/jwt.auth.guard.js';
@@ -13,33 +14,28 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  const allowedOrigins = [
-    process.env.FRONTEND_URL, // production
-    'http://localhost:8080',
-  ].filter(Boolean);
-
-  const previewRegex = /^https:\/\/managment-system-[a-z0-9-]+\.vercel\.app$/;
+  app.use(helmet());
+  app.use(cookieParser());
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        return callback(new Error('CORS: Origin header is required'));
+      }
+
+      const allowedOrigins = [
+        process.env.FRONTEND_URL,
+        'http://localhost:8080',
+      ].filter(Boolean);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      if (previewRegex.test(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error('CORS blocked'));
+      return callback(new Error('CORS blocked: Origin not allowed'));
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
   });
-
-  app.use(cookieParser());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -49,6 +45,7 @@ async function bootstrap() {
     }),
   );
 
+  // Register JWT authentication guard globally
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(reflector));
 

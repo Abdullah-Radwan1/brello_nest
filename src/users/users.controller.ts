@@ -8,6 +8,7 @@ import {
   Request,
   Patch,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service.js';
 
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -41,6 +42,7 @@ export class UsersController {
   }
   @Public()
   @Get('/check-name')
+  @Throttle({ 'check-name': { limit: 30, ttl: 12000 } }) // 5 requests per hour per IP
   checkname(@Query('name') name: string) {
     return this.usersService.isNameTaken(name);
   }

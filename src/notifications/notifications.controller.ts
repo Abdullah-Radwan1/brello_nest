@@ -19,7 +19,7 @@ export class NotificationsController {
   async findAll(
     @CurrentUser() user: { id: string; name: string },
     @Query('page') page = '1',
-    @Query('limit') limit = '20',
+    @Query('limit') limit = '10',
   ) {
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
