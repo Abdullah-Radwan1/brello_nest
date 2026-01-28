@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Query,
-  Patch,
-  Param,
-} from '@nestjs/common';
+import { Controller, Get, Query, Patch, Param } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CurrentUser } from '../db/current-user.decorator';
 

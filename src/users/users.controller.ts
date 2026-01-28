@@ -42,7 +42,7 @@ export class UsersController {
   }
   @Public()
   @Get('/check-name')
-  @Throttle({ 'check-name': { limit: 30, ttl: 12000 } }) // 5 requests per hour per IP
+  @Throttle({ 'check-name': { limit: 30, ttl: 12000 } })
   checkname(@Query('name') name: string) {
     return this.usersService.isNameTaken(name);
   }

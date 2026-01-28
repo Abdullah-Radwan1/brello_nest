@@ -13,6 +13,7 @@ import { AuthorizationModule } from './assertion/assertion.module.js';
 import { AiModule } from './ai/ai.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/jwt.auth.guard.js';
 
 @Module({
   imports: [
@@ -28,19 +29,13 @@ import { APP_GUARD } from '@nestjs/core';
     ThrottlerModule.forRoot({
       throttlers: [
         {
-          ttl: 60000,
-          limit: process.env.NODE_ENV === 'development' ? 10000 : 220,
+          ttl: 1000,
+          limit: 30000,
         },
       ],
     }),
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

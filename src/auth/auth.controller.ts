@@ -13,7 +13,7 @@ import { Public } from './public.decorator';
 import type { Request, Response } from 'express';
 import { SignupDto } from './dto/auth.dto';
 import { CurrentUser } from '../db/current-user.decorator';
-import { Throttle } from '@nestjs/throttler';
+
 const NODE_ENV = process.env.NODE_ENV === 'prod';
 
 @Controller('auth')
