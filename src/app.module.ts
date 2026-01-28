@@ -25,31 +25,22 @@ import { APP_GUARD } from '@nestjs/core';
     InvitationModule,
     AuthorizationModule,
     AiModule,
-    // ThrottlerModule.forRoot([
-    //   {
-    //     name: 'global',
-    //     ttl: 60000, // 60 seconds
-    //     limit: 500, // 500 requests per minute globally
-    //   },
-    //   {
-    //     name: 'login',
-    //     ttl: 60000,
-    //     limit: 30, // 30 login attempts per minute
-    //   },
-    //   {
-    //     name: 'check-name',
-    //     ttl: 60000,
-    //     limit: 100, // 100 name checks per minute
-    //   },
-    // ]),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: process.env.NODE_ENV === 'development' ? 10000 : 220,
+        },
+      ],
+    }),
   ],
   controllers: [AppController],
   providers: [
-    //   AppService,
-    //   {
-    //     provide: APP_GUARD,
-    //     useClass: ThrottlerGuard,
-    //   },
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}
