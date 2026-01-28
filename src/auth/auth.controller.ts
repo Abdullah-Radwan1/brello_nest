@@ -37,7 +37,7 @@ export class AuthController {
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: isProd, // false in dev, true in prod
-      sameSite: 'lax', // Prevent CSRF attacks
+      sameSite: 'none', // Prevent CSRF attacks
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
@@ -62,7 +62,7 @@ export class AuthController {
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: isProd, // false in dev, true in prod
-      sameSite: 'lax', // Prevent CSRF attacks
+      sameSite: 'none', // Prevent CSRF attacks
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
@@ -79,7 +79,7 @@ export class AuthController {
     // Clear the HTTP-only cookie
     res.clearCookie('access_token', {
       httpOnly: true,
-      sameSite: 'lax', // Prevent CSRF attacks
+      sameSite: 'none', // Prevent CSRF attacks
       secure: isProd, // false in dev, true in prod
     });
 
