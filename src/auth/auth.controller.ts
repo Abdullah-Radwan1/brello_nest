@@ -14,7 +14,7 @@ import type { Request, Response } from 'express';
 import { SignupDto } from './dto/auth.dto';
 import { CurrentUser } from '../db/current-user.decorator';
 
-const NODE_ENV = process.env.NODE_ENV === 'prod';
+const NODE_ENV = process.env.NODE_ENV === 'production';
 
 @Controller('auth')
 export class AuthController {
