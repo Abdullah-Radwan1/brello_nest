@@ -64,7 +64,7 @@ export const TaskPriorityEnum = pgEnum('task_priority', [
 ]);
 export const ColorEnum = pgEnum('color_enums', [
   'VIOLET',
-  'TEAL',
+  'SLATE',
   'AMBER',
   'PINK',
   'EMERALD',

@@ -115,12 +115,8 @@
           "name": "Activity_user_id_User_id_fk",
           "tableFrom": "Activity",
           "tableTo": "User",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -128,12 +124,8 @@
           "name": "Activity_project_id_Project_id_fk",
           "tableFrom": "Activity",
           "tableTo": "Project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -182,12 +174,8 @@
           "name": "Contributor_project_id_Project_id_fk",
           "tableFrom": "Contributor",
           "tableTo": "Project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -195,12 +183,8 @@
           "name": "Contributor_user_id_User_id_fk",
           "tableFrom": "Contributor",
           "tableTo": "User",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -262,12 +246,8 @@
           "name": "Invitation_project_id_Project_id_fk",
           "tableFrom": "Invitation",
           "tableTo": "Project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -275,12 +255,8 @@
           "name": "Invitation_invited_user_id_User_id_fk",
           "tableFrom": "Invitation",
           "tableTo": "User",
-          "columnsFrom": [
-            "invited_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -288,12 +264,8 @@
           "name": "Invitation_inviter_id_User_id_fk",
           "tableFrom": "Invitation",
           "tableTo": "User",
-          "columnsFrom": [
-            "inviter_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["inviter_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -361,12 +333,8 @@
           "name": "Notification_user_id_User_id_fk",
           "tableFrom": "Notification",
           "tableTo": "User",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -435,12 +403,8 @@
           "name": "Project_manager_id_User_id_fk",
           "tableFrom": "Project",
           "tableTo": "User",
-          "columnsFrom": [
-            "manager_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["manager_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -528,12 +492,8 @@
           "name": "Task_project_id_Project_id_fk",
           "tableFrom": "Task",
           "tableTo": "Project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -541,12 +501,8 @@
           "name": "Task_assignee_id_User_id_fk",
           "tableFrom": "Task",
           "tableTo": "User",
-          "columnsFrom": [
-            "assignee_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assignee_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -600,12 +556,8 @@
           "name": "TaskReview_task_id_Task_id_fk",
           "tableFrom": "TaskReview",
           "tableTo": "Task",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["task_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -613,12 +565,8 @@
           "name": "TaskReview_reviewer_id_User_id_fk",
           "tableFrom": "TaskReview",
           "tableTo": "User",
-          "columnsFrom": [
-            "reviewer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reviewer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -665,12 +613,8 @@
           "name": "TaskSubmission_task_id_Task_id_fk",
           "tableFrom": "TaskSubmission",
           "tableTo": "Task",
-          "columnsFrom": [
-            "task_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["task_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -678,12 +622,8 @@
           "name": "TaskSubmission_submitted_by_User_id_fk",
           "tableFrom": "TaskSubmission",
           "tableTo": "User",
-          "columnsFrom": [
-            "submitted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["submitted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -746,16 +686,12 @@
         "User_email_unique": {
           "name": "User_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "User_name_unique": {
           "name": "User_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -785,23 +721,12 @@
     "public.color_enums": {
       "name": "color_enums",
       "schema": "public",
-      "values": [
-        "VIOLET",
-        "TEAL",
-        "AMBER",
-        "PINK",
-        "EMERALD",
-        "INDIGO"
-      ]
+      "values": ["VIOLET", "SLATE", "AMBER", "PINK", "EMERALD", "INDIGO"]
     },
     "public.Invitation_enums": {
       "name": "Invitation_enums",
       "schema": "public",
-      "values": [
-        "PENDING",
-        "ACCEPTED",
-        "DECLINED"
-      ]
+      "values": ["PENDING", "ACCEPTED", "DECLINED"]
     },
     "public.notification_type": {
       "name": "notification_type",
@@ -832,37 +757,22 @@
     "public.role_enum": {
       "name": "role_enum",
       "schema": "public",
-      "values": [
-        "contributor",
-        "manager"
-      ]
+      "values": ["contributor", "manager"]
     },
     "public.task_priority": {
       "name": "task_priority",
       "schema": "public",
-      "values": [
-        "LOW",
-        "NORMAL",
-        "URGENT"
-      ]
+      "values": ["LOW", "NORMAL", "URGENT"]
     },
     "public.task_review_status": {
       "name": "task_review_status",
       "schema": "public",
-      "values": [
-        "APPROVED",
-        "REJECTED"
-      ]
+      "values": ["APPROVED", "REJECTED"]
     },
     "public.task_enums": {
       "name": "task_enums",
       "schema": "public",
-      "values": [
-        "TODO",
-        "IN_PROGRESS",
-        "REVIEW",
-        "DONE"
-      ]
+      "values": ["TODO", "IN_PROGRESS", "REVIEW", "DONE"]
     }
   },
   "schemas": {},

@@ -49,17 +49,19 @@ export class AuthService {
     };
   }
 
-  async signup({ color, email, name, password }: SignupDto) {
+  async register({ color, email, name, password }: SignupDto) {
     const existingUser = await this.usersService.findOneByEmail(email);
     if (existingUser) {
       throw new UnauthorizedException('Email already in use');
     }
+    console.log('dsds', color);
     const createdUser = await this.usersService.create({
       email,
       name,
       color,
       password,
     });
+    console.log('dsds', createdUser);
     const user = {
       id: createdUser[0].id,
       name: createdUser[0].name,

@@ -57,7 +57,7 @@ export class AuthController {
   @Public()
   @Post('register')
   async signup(@Body() dto: SignupDto, @Res() res: Response) {
-    const { user, access_token } = await this.authService.signup(dto);
+    const { user, access_token } = await this.authService.register(dto);
 
     res.cookie('access_token', access_token, {
       httpOnly: true,
@@ -70,7 +70,8 @@ export class AuthController {
     return res.send({
       name: user.name,
       email: user.email,
-      message: 'User registered successfully',
+
+      color: user.color,
     });
   }
 
