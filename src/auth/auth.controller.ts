@@ -70,7 +70,7 @@ export class AuthController {
     return res.send({
       name: user.name,
       email: user.email,
-
+      id: user.id,
       color: user.color,
     });
   }
